@@ -1,14 +1,14 @@
 # Projecte ASW — Taiga Clone
 
 ## Membres de l'equip
-- Membre A
-- Membre B
-- Membre C
-- Membre D
-- Membre E
+- Mohamed Amara
+- Denis Roca
+- Victor Carilla
+- Adam Ziani
+- Aina Oskam
 
 ## Links
-- 🔗 Taiga: (afegir link)
+- 🔗 Taiga: https://tree.taiga.io/project/victorr-cm-asw/timeline
 - 🚀 App desplegada: (afegir link)
 
 ---
