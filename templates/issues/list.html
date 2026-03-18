@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Issues{% endblock %}
+
+{% block content %}
+<div class="issues-header">
+    <h1>Issues</h1>
+    <a href="{% url 'issue_new' %}" class="btn btn-new">New issue</a>
+</div>
+
+{% if issues %}
+<table class="issues-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>Subject</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Severity</th>
+            <th>Assigned to</th>
+            <th>Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for issue in issues %}
+        <tr>
+            <td>{{ issue.id }}</td>
+            <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.get_issue_type_display }}</span></td>
+            <td>{{ issue.subject }}</td>
+            <td><span class="badge badge-status-{{ issue.status }}">{{ issue.get_status_display }}</span></td>
+            <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
+            <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
+            <td>{{ issue.assigned_to|default:"-" }}</td>
+            <td>{{ issue.created_at|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="no-issues">No issues yet.</p>
+{% endif %}
+{% endblock %}
