@@ -35,7 +35,8 @@
             <td>{{ issue.assigned_to|default:"-" }}</td>
             <td>{{ issue.created_at|date:"d/m/Y" }}</td>
             <td>
-                <a href="{% url 'issue_delete' issue.pk %}" style="color: #c90000; text-decoration: none; font-weight: bold;">Delete</a>
+                <a href="{% url 'issue_delete' issue.pk %}"
+                    style="color: #c90000; text-decoration: none; font-weight: bold;">Delete</a>
             </td>
         </tr>
         {% endfor %}
@@ -44,4 +45,5 @@
 {% else %}
 <p class="no-issues">No issues yet.</p>
 {% endif %}
+
 {% endblock %}
