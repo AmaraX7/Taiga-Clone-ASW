@@ -29,6 +29,12 @@ services:
         fromDatabase:
           name: projecte-asw-db
           property: port
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: ""
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: ""
+      - key: DJANGO_SUPERUSER_PASSWORD
+        value: ""
       - key: GOOGLE_CLIENT_ID
         value: ""
       - key: GOOGLE_CLIENT_SECRET
