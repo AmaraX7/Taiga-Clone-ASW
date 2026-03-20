@@ -20,6 +20,7 @@
             <th>Severity</th>
             <th>Assigned to</th>
             <th>Created</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -33,6 +34,9 @@
             <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
             <td>{{ issue.assigned_to|default:"-" }}</td>
             <td>{{ issue.created_at|date:"d/m/Y" }}</td>
+            <td>
+                <a href="{% url 'issue_delete' issue.pk %}" style="color: #c90000; text-decoration: none; font-weight: bold;">Delete</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
