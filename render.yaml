@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: projecte-asw-web
+    env: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "True"
+      - key: DB_NAME
+        fromDatabase:
+          name: projecte-asw-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: projecte-asw-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: projecte-asw-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: projecte-asw-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: projecte-asw-db
+          property: port
+      - key: GOOGLE_CLIENT_ID
+        value: ""
+      - key: GOOGLE_CLIENT_SECRET
+        value: ""
+      - key: AWS_ACCESS_KEY_ID
+        value: ""
+      - key: AWS_SECRET_ACCESS_KEY
+        value: ""
+      - key: AWS_STORAGE_BUCKET_NAME
+        value: ""
+      - key: AWS_S3_REGION_NAME
+        value: "eu-west-1"
+
+databases:
+  - name: projecte-asw-db
+    plan: free
