@@ -5,7 +5,11 @@ from .forms import IssueForm
 
 
 def get_default_user():
-    return User.objects.get(username='admin')
+    user, _ = User.objects.get_or_create(
+        username='admin',
+        defaults={'email': 'admin@example.com'},
+    )
+    return user
 
 
 def issue_list(request):
