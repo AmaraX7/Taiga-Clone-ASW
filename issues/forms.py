@@ -5,4 +5,4 @@ from .models import Issue
 class IssueForm(forms.ModelForm):
     class Meta:
         model = Issue
-        fields = ['subject', 'description', 'issue_type', 'severity', 'priority', 'status']
+        fields = ['subject', 'description']
