@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
+from django.db.models import Q
 from .models import Issue
 from .forms import IssueForm
 
@@ -13,8 +14,13 @@ def get_default_user():
 
 
 def issue_list(request):
+    q = request.GET.get('q', '').strip()
     issues = Issue.objects.all()
-    return render(request, 'issues/list.html', {'issues': issues})
+    if q:
+        issues = issues.filter(
+            Q(subject__icontains=q) | Q(description__icontains=q)
+        )
+    return render(request, 'issues/list.html', {'issues': issues, 'query': q})
 
 
 def issue_new(request):
