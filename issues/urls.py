@@ -13,4 +13,7 @@ urlpatterns = [
         views.attachment_delete,
         name='attachment_delete',
     ),
+    path('issues/<int:issue_id>/comments/add/', views.comment_add, name='comment_add'),
+    path('comments/<int:comment_id>/edit/', views.comment_edit, name='comment_edit'),
+    path('comments/<int:comment_id>/delete/', views.comment_delete, name='comment_delete'),
 ]

@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Attachment, Issue
+from .models import Attachment, Comment, Issue
 from .forms import AssignIssueForm, AttachmentForm, IssueForm
 
 
@@ -114,3 +114,35 @@ def attachment_delete(request, issue_id, attachment_id):
         attachment.file.delete(save=False)
         attachment.delete()
     return redirect('issue_detail', issue_id=issue.id)
+
+
+def comment_add(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+    if request.method == 'POST':
+        text = request.POST.get('text', '').strip()
+        if text:
+            Comment.objects.create(
+                issue=issue,
+                author=get_default_user(),
+                text=text
+            )
+    return redirect('issue_detail', issue_id=issue.id)
+
+
+def comment_edit(request, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    if request.method == 'POST':
+        text = request.POST.get('text', '').strip()
+        if text:
+            comment.text = text
+            comment.save()
+        return redirect('issue_detail', issue_id=comment.issue.pk)
+    return render(request, 'issues/comment_edit.html', {'comment': comment})
+
+
+def comment_delete(request, comment_id):
+    comment = get_object_or_404(Comment, pk=comment_id)
+    issue_id = comment.issue.pk
+    if request.method == 'POST':
+        comment.delete()
+    return redirect('issue_detail', issue_id=issue_id)

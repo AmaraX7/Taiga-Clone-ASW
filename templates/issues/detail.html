@@ -58,12 +58,29 @@
 
     <section class="detail-card">
         <h2>Comments</h2>
+        
+        <form method="post" action="{% url 'comment_add' issue.id %}" class="inline-form">
+            {% csrf_token %}
+            <textarea name="text" placeholder="Add a comment..." rows="4" required></textarea>
+            <button type="submit" class="btn btn-new">Post comment</button>
+        </form>
+
         {% if issue.comments.all %}
         <ul class="item-list comments-list">
             {% for comment in issue.comments.all %}
-            <li>
+            <li class="comment-item">
                 <p>{{ comment.text }}</p>
-                <span>by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i" }}</span>
+                <span class="comment-meta">by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i" }}</span>
+                {% if comment.modified_at != comment.created_at %}
+                <span class="comment-meta">(edited {{ comment.modified_at|date:"d/m/Y H:i" }})</span>
+                {% endif %}
+                <div class="comment-actions">
+                    <a href="{% url 'comment_edit' comment.id %}" class="btn btn-secondary">Edit</a>
+                    <form method="post" action="{% url 'comment_delete' comment.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </div>
             </li>
             {% endfor %}
         </ul>

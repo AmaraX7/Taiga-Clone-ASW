@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Comment{% endblock %}
+
+{% block content %}
+<div class="issues-header">
+    <h1>Edit comment</h1>
+    <a href="{% url 'issue_detail' comment.issue.id %}" class="btn btn-cancel">Cancel</a>
+</div>
+
+<div class="form-container">
+    <form method="post" class="form-group">
+        {% csrf_token %}
+        <div class="form-field">
+            <label for="text">Comment text:</label>
+            <textarea name="text" id="text" rows="6" required>{{ comment.text }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-new">Save changes</button>
+        <a href="{% url 'issue_detail' comment.issue.id %}" class="btn btn-cancel">Cancel</a>
+    </form>
+</div>
+{% endblock %}
