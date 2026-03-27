@@ -39,8 +39,10 @@ body {
 
 /* Issues header */
 .issues-header {
-    margin-bottom: 0;
-    padding: 20px 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
 }
 
 .issues-header h1 {
@@ -188,7 +190,6 @@ body {
 .sort-header.active {
     color: #008aa8;
 }
-
 /* Table */
 .issues-table {
     width: 100%;

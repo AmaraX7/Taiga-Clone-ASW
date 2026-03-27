@@ -5,30 +5,8 @@
 {% block content %}
 <div class="issues-header">
     <h1>Issues</h1>
-</div>
-
-<div class="issues-toolbar-bar">
-    <form method="get" class="search-form">
-        <div class="search-wrapper">
-            <input type="text" name="q" value="{{ query }}"
-                   placeholder="Search by subject or description" class="search-input">
-            {% if query %}
-            <a href="{% url 'issue_list' %}" class="search-clear" title="Clear">&#x2715;</a>
-            {% endif %}
-            <button type="submit" class="btn-search-icon" title="Search">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.5"/>
-                    <line x1="8.5" y1="8.5" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-            </button>
-        </div>
-    </form>
     <a href="{% url 'issue_new' %}" class="btn btn-new">New issue</a>
 </div>
-
-{% if query %}
-<p class="search-results-info">{{ issues|length }} result{{ issues|length|pluralize }} for "<strong>{{ query }}</strong>"</p>
-{% endif %}
 
 {% if issues %}
 <table class="issues-table">
@@ -50,7 +28,18 @@
         <tr>
             <td>{{ issue.id }}</td>
             <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.get_issue_type_display }}</span></td>
-            <td><a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a></td>
+            <td>
+                <a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a>
+
+                {% if issue.deadline %}
+                <svg class="list-deadline-icon status-{{ issue.deadline_status }}" xmlns="http://www.w3.org/2000/svg"
+                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+                {% endif %}
+            </td>
             <td><span class="badge badge-status-{{ issue.status }}">{{ issue.get_status_display }}</span></td>
             <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
             <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
@@ -65,10 +54,24 @@
     </tbody>
 </table>
 {% else %}
-{% if query %}
-<p class="no-issues">No issues found for "{{ query }}".</p>
-{% else %}
 <p class="no-issues">No issues yet.</p>
 {% endif %}
-{% endif %}
+<style>
+    .list-deadline-icon {
+        vertical-align: text-bottom;
+        margin-left: 6px;
+    }
+
+    .list-deadline-icon.status-red {
+        color: #de3b53;
+    }
+
+    .list-deadline-icon.status-orange {
+        color: #f39200;
+    }
+
+    .list-deadline-icon.status-green {
+        color: #9bc300;
+    }
+</style>
 {% endblock %}

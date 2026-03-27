@@ -6,11 +6,7 @@ from .forms import AssignIssueForm, AttachmentForm, IssueForm
 
 
 def get_default_user():
-    user, _ = User.objects.get_or_create(
-        username='admin',
-        defaults={'email': 'admin@example.com'},
-    )
-    return user
+    return User.objects.get(username='admin')
 
 
 SORTABLE_FIELDS = {
@@ -55,9 +51,7 @@ def issue_new(request):
         form = IssueForm(request.POST)
         if form.is_valid():
             issue = form.save(commit=False)
-            user = get_default_user()
-            issue.created_by = user
-            issue.assigned_to = user
+            issue.created_by = get_default_user()
             issue.save()
             return redirect('issue_list')
     else:
