@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load issue_filters %}
 
 {% block title %}Issues{% endblock %}
 
@@ -8,70 +9,142 @@
     <a href="{% url 'issue_new' %}" class="btn btn-new">New issue</a>
 </div>
 
-{% if issues %}
-<table class="issues-table">
-    <thead>
-        <tr>
-            <th><a href="?sort=id{% if current_sort == 'id' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'id' %}active{% endif %}">#{% if current_sort == 'id' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
-            <th><a href="?sort=issue_type{% if current_sort == 'issue_type' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">Type{% if current_sort == 'issue_type' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
-            <th><a href="?sort=subject{% if current_sort == 'subject' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'subject' %}active{% endif %}">Subject{% if current_sort == 'subject' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
-            <th><a href="?sort=status{% if current_sort == 'status' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">Status{% if current_sort == 'status' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
-            <th><a href="?sort=priority{% if current_sort == 'priority' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'priority' %}active{% endif %}">Priority{% if current_sort == 'priority' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
-            <th><a href="?sort=severity{% if current_sort == 'severity' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'severity' %}active{% endif %}">Severity{% if current_sort == 'severity' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
-            <th><a href="?sort=assigned_to{% if current_sort == 'assigned_to' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">Assigned to{% if current_sort == 'assigned_to' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
-            <th><a href="?sort=created_at{% if current_sort == 'created_at' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'created_at' %}active{% endif %}">Created{% if current_sort == 'created_at' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for issue in issues %}
-        <tr>
-            <td>{{ issue.id }}</td>
-            <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.get_issue_type_display }}</span></td>
-            <td>
-                <a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a>
-
-                {% if issue.deadline %}
-                <svg class="list-deadline-icon status-{{ issue.deadline_status }}" xmlns="http://www.w3.org/2000/svg"
-                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                </svg>
-                {% endif %}
-            </td>
-            <td><span class="badge badge-status-{{ issue.status }}">{{ issue.get_status_display }}</span></td>
-            <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
-            <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
-            <td>{{ issue.assigned_to|default:"-" }}</td>
-            <td>{{ issue.created_at|date:"d/m/Y" }}</td>
-            <td>
-                <a href="{% url 'issue_delete' issue.pk %}"
-                    style="color: #c90000; text-decoration: none; font-weight: bold;">Delete</a>
-            </td>
-        </tr>
+<div class="issues-toolbar-bar">
+    <form method="get" class="search-form">
+        {% for param, values in active_filters.items %}
+            {% for val in values %}
+                <input type="hidden" name="{{ param }}" value="{{ val }}">
+            {% endfor %}
         {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p class="no-issues">No issues yet.</p>
+        <input type="hidden" name="sort" value="{{ current_sort }}">
+        <input type="hidden" name="order" value="{{ current_order }}">
+        <div class="search-wrapper">
+            <input type="text" name="q" value="{{ query }}"
+                   placeholder="Search by subject or description" class="search-input">
+            {% if query %}
+            {% remove_param_url 'q' as clear_search_url %}
+            <a href="{{ clear_search_url }}" class="search-clear" title="Clear">&#x2715;</a>
+            {% endif %}
+            <button type="submit" class="btn-search-icon" title="Search">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="8.5" y1="8.5" x2="12.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if query %}
+<p class="search-results-info">{{ issues|length }} result{{ issues|length|pluralize }} for "<strong>{{ query }}</strong>"</p>
 {% endif %}
+
+<div class="issues-layout">
+
+    <!-- SIDEBAR: Filtres -->
+    <aside class="filters-sidebar">
+        <div class="filters-header">
+            <span class="filters-title">Filters</span>
+            {% if active_filters %}
+            <a href="?{% if query %}q={{ query }}&{% endif %}sort={{ current_sort }}&order={{ current_order }}" class="filters-clear">Clear all</a>
+            {% endif %}
+        </div>
+
+        {% for param, options in filter_options.items %}
+        <details class="filter-category" {% if param in active_filters %}open{% endif %}>
+            <summary class="filter-category-title">
+                {% dict_get filter_labels param %}
+                {% if param in active_filters %}
+                <span class="filter-active-count">{{ active_filters|length }}</span>
+                {% endif %}
+            </summary>
+            <ul class="filter-options">
+                {% for value, label in options %}
+                {% toggle_filter_url param value as toggle_url %}
+                {% is_filter_active param value as active %}
+                <li>
+                    <a href="{{ toggle_url }}" class="filter-option {% if active %}active{% endif %}">
+                        <span class="filter-check">{% if active %}&#x2713;{% endif %}</span>
+                        {{ label }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% endfor %}
+    </aside>
+
+    <!-- MAIN: Taula d'issues -->
+    <div class="issues-main">
+        {% if issues %}
+        <table class="issues-table">
+            <thead>
+                <tr>
+                    {% sort_url 'id' current_sort current_order as url_id %}
+                    <th><a href="{{ url_id }}" class="sort-header {% if current_sort == 'id' %}active{% endif %}"># <span class="sort-arrows">{% if current_sort == 'id' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'issue_type' current_sort current_order as url_type %}
+                    <th><a href="{{ url_type }}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">Type <span class="sort-arrows">{% if current_sort == 'issue_type' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'subject' current_sort current_order as url_subject %}
+                    <th><a href="{{ url_subject }}" class="sort-header {% if current_sort == 'subject' %}active{% endif %}">Subject <span class="sort-arrows">{% if current_sort == 'subject' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'status' current_sort current_order as url_status %}
+                    <th><a href="{{ url_status }}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">Status <span class="sort-arrows">{% if current_sort == 'status' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'priority' current_sort current_order as url_priority %}
+                    <th><a href="{{ url_priority }}" class="sort-header {% if current_sort == 'priority' %}active{% endif %}">Priority <span class="sort-arrows">{% if current_sort == 'priority' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'severity' current_sort current_order as url_severity %}
+                    <th><a href="{{ url_severity }}" class="sort-header {% if current_sort == 'severity' %}active{% endif %}">Severity <span class="sort-arrows">{% if current_sort == 'severity' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'assigned_to' current_sort current_order as url_assigned %}
+                    <th><a href="{{ url_assigned }}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">Assigned to <span class="sort-arrows">{% if current_sort == 'assigned_to' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'created_at' current_sort current_order as url_created %}
+                    <th><a href="{{ url_created }}" class="sort-header {% if current_sort == 'created_at' %}active{% endif %}">Created <span class="sort-arrows">{% if current_sort == 'created_at' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in issues %}
+                <tr>
+                    <td>{{ issue.id }}</td>
+                    <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.get_issue_type_display }}</span></td>
+                    <td>
+                        <a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a>
+                        {% if issue.deadline %}
+                        <svg class="list-deadline-icon status-{{ issue.deadline_status }}" xmlns="http://www.w3.org/2000/svg"
+                            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-status-{{ issue.status }}">{{ issue.get_status_display }}</span></td>
+                    <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
+                    <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
+                    <td>{{ issue.assigned_to|default:"-" }}</td>
+                    <td>{{ issue.created_at|date:"d/m/Y" }}</td>
+                    <td>
+                        <a href="{% url 'issue_delete' issue.pk %}"
+                            style="color: #c90000; text-decoration: none; font-weight: bold;">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        {% if query %}
+        <p class="no-issues">No issues found for "{{ query }}".</p>
+        {% elif active_filters %}
+        <p class="no-issues">No issues match the selected filters.</p>
+        {% else %}
+        <p class="no-issues">No issues yet.</p>
+        {% endif %}
+        {% endif %}
+    </div>
+
+</div>
+
 <style>
-    .list-deadline-icon {
-        vertical-align: text-bottom;
-        margin-left: 6px;
-    }
-
-    .list-deadline-icon.status-red {
-        color: #de3b53;
-    }
-
-    .list-deadline-icon.status-orange {
-        color: #f39200;
-    }
-
-    .list-deadline-icon.status-green {
-        color: #9bc300;
-    }
+    .list-deadline-icon { vertical-align: text-bottom; margin-left: 6px; }
+    .list-deadline-icon.status-red { color: #de3b53; }
+    .list-deadline-icon.status-orange { color: #f39200; }
+    .list-deadline-icon.status-green { color: #9bc300; }
 </style>
 {% endblock %}
