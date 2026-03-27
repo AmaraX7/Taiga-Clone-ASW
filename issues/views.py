@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import Issue
@@ -36,3 +36,10 @@ def issue_new(request):
     else:
         form = IssueForm()
     return render(request, 'issues/new.html', {'form': form})
+
+def issue_delete(request, pk):
+    issue = get_object_or_404(Issue, pk=pk)
+    if request.method == 'POST':
+        issue.delete()
+        return redirect('issue_list')
+    return render(request, 'issues/delete.html', {'issue': issue})
