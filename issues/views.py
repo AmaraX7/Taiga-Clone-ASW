@@ -13,14 +13,41 @@ def get_default_user():
     return user
 
 
+SORTABLE_FIELDS = {
+    'id': 'id',
+    'issue_type': 'issue_type',
+    'subject': 'subject',
+    'status': 'status',
+    'priority': 'priority',
+    'severity': 'severity',
+    'assigned_to': 'assigned_to__username',
+    'created_at': 'created_at',
+}
+
+
 def issue_list(request):
     q = request.GET.get('q', '').strip()
+    sort = request.GET.get('sort', 'created_at')
+    order = request.GET.get('order', 'desc')
+
     issues = Issue.objects.all()
     if q:
         issues = issues.filter(
             Q(subject__icontains=q) | Q(description__icontains=q)
         )
-    return render(request, 'issues/list.html', {'issues': issues, 'query': q})
+
+    if sort in SORTABLE_FIELDS:
+        order_field = SORTABLE_FIELDS[sort]
+        if order == 'desc':
+            order_field = f'-{order_field}'
+        issues = issues.order_by(order_field)
+
+    return render(request, 'issues/list.html', {
+        'issues': issues,
+        'query': q,
+        'current_sort': sort,
+        'current_order': order,
+    })
 
 
 def issue_new(request):

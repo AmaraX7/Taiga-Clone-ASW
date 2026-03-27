@@ -34,14 +34,14 @@
 <table class="issues-table">
     <thead>
         <tr>
-            <th>#</th>
-            <th>Type</th>
-            <th>Subject</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Severity</th>
-            <th>Assigned to</th>
-            <th>Created</th>
+            <th><a href="?sort=id{% if current_sort == 'id' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'id' %}active{% endif %}">#{% if current_sort == 'id' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=issue_type{% if current_sort == 'issue_type' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">Type{% if current_sort == 'issue_type' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=subject{% if current_sort == 'subject' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'subject' %}active{% endif %}">Subject{% if current_sort == 'subject' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=status{% if current_sort == 'status' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">Status{% if current_sort == 'status' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=priority{% if current_sort == 'priority' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'priority' %}active{% endif %}">Priority{% if current_sort == 'priority' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=severity{% if current_sort == 'severity' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'severity' %}active{% endif %}">Severity{% if current_sort == 'severity' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=assigned_to{% if current_sort == 'assigned_to' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">Assigned to{% if current_sort == 'assigned_to' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+            <th><a href="?sort=created_at{% if current_sort == 'created_at' and current_order == 'asc' %}&order=desc{% else %}&order=asc{% endif %}{% if query %}&q={{ query }}{% endif %}" class="sort-header {% if current_sort == 'created_at' %}active{% endif %}">Created{% if current_sort == 'created_at' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
             <th>Actions</th>
         </tr>
     </thead>
