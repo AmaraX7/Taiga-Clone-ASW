@@ -45,3 +45,20 @@ class Issue(models.Model):
 
     def __str__(self):
         return f"#{self.pk} {self.subject}"
+
+
+
+class Comment(models.Model):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Comment by {self.author} on {self.issue}"
+    
+
