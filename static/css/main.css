@@ -168,6 +168,27 @@ body {
     margin-bottom: 12px;
 }
 
+/* Sortable headers */
+.sort-header {
+    color: #70728f;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    font-size: 13px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.sort-header:hover {
+    color: #008aa8;
+}
+
+.sort-header.active {
+    color: #008aa8;
+}
+
 /* Table */
 .issues-table {
     width: 100%;
