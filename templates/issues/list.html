@@ -81,19 +81,19 @@
             <thead>
                 <tr>
                     {% sort_url 'issue_type' current_sort current_order as url_type %}
-                    <th><a href="{{ url_type }}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">Type{% if current_sort == 'issue_type' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_type }}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">Type <span class="sort-arrows">{% if current_sort == 'issue_type' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'subject' current_sort current_order as url_subject %}
-                    <th><a href="{{ url_subject }}" class="sort-header {% if current_sort == 'subject' %}active{% endif %}">Subject{% if current_sort == 'subject' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_subject }}" class="sort-header {% if current_sort == 'subject' %}active{% endif %}">Subject <span class="sort-arrows">{% if current_sort == 'subject' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'status' current_sort current_order as url_status %}
-                    <th><a href="{{ url_status }}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">Status{% if current_sort == 'status' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_status }}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">Status <span class="sort-arrows">{% if current_sort == 'status' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'priority' current_sort current_order as url_priority %}
-                    <th><a href="{{ url_priority }}" class="sort-header {% if current_sort == 'priority' %}active{% endif %}">Priority{% if current_sort == 'priority' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_priority }}" class="sort-header {% if current_sort == 'priority' %}active{% endif %}">Priority <span class="sort-arrows">{% if current_sort == 'priority' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'severity' current_sort current_order as url_severity %}
-                    <th><a href="{{ url_severity }}" class="sort-header {% if current_sort == 'severity' %}active{% endif %}">Severity{% if current_sort == 'severity' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_severity }}" class="sort-header {% if current_sort == 'severity' %}active{% endif %}">Severity <span class="sort-arrows">{% if current_sort == 'severity' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'assigned_to' current_sort current_order as url_assigned %}
-                    <th><a href="{{ url_assigned }}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">Assigned to{% if current_sort == 'assigned_to' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_assigned }}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">Assigned to <span class="sort-arrows">{% if current_sort == 'assigned_to' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'created_at' current_sort current_order as url_created %}
-                    <th><a href="{{ url_created }}" class="sort-header {% if current_sort == 'created_at' %}active{% endif %}">Created{% if current_sort == 'created_at' %} {% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                    <th><a href="{{ url_created }}" class="sort-header {% if current_sort == 'created_at' %}active{% endif %}">Created <span class="sort-arrows">{% if current_sort == 'created_at' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                 </tr>
             </thead>
             <tbody>

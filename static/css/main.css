@@ -331,6 +331,15 @@ body {
     color: #008aa8;
 }
 
+.sort-arrows {
+    color: #c0c4d0;
+    font-size: 11px;
+}
+
+.sort-header.active .sort-arrows {
+    color: #008aa8;
+}
+
 /* Table */
 .issues-table {
     width: 100%;
