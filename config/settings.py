@@ -1,11 +1,16 @@
 from pathlib import Path
-from decouple import config
+from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=True, cast=bool)
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='https://*.onrender.com,http://localhost:8000,http://127.0.0.1:8000',
+    cast=Csv(),
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
