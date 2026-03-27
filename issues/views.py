@@ -18,14 +18,13 @@ def issue_new(request):
         form = IssueForm(request.POST)
         if form.is_valid():
             issue = form.save(commit=False)
-            user = get_default_user()
-            issue.created_by = user
-            issue.assigned_to = user
+            issue.created_by = get_default_user()
             issue.save()
             return redirect('issue_list')
     else:
         form = IssueForm()
     return render(request, 'issues/new.html', {'form': form})
+
 
 def issue_delete(request, pk):
     issue = get_object_or_404(Issue, pk=pk)
