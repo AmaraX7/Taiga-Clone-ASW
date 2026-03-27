@@ -6,6 +6,7 @@
 {% block content %}
 <div class="issues-header">
     <h1>Issues</h1>
+    <a href="{% url 'issue_new' %}" class="btn btn-new">New issue</a>
 </div>
 
 <div class="issues-toolbar-bar">
@@ -32,7 +33,6 @@
             </button>
         </div>
     </form>
-    <a href="{% url 'issue_new' %}" class="btn btn-new">New issue</a>
 </div>
 
 {% if query %}
@@ -80,6 +80,8 @@
         <table class="issues-table">
             <thead>
                 <tr>
+                    {% sort_url 'id' current_sort current_order as url_id %}
+                    <th><a href="{{ url_id }}" class="sort-header {% if current_sort == 'id' %}active{% endif %}"># <span class="sort-arrows">{% if current_sort == 'id' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'issue_type' current_sort current_order as url_type %}
                     <th><a href="{{ url_type }}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">Type <span class="sort-arrows">{% if current_sort == 'issue_type' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'subject' current_sort current_order as url_subject %}
@@ -94,18 +96,34 @@
                     <th><a href="{{ url_assigned }}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">Assigned to <span class="sort-arrows">{% if current_sort == 'assigned_to' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'created_at' current_sort current_order as url_created %}
                     <th><a href="{{ url_created }}" class="sort-header {% if current_sort == 'created_at' %}active{% endif %}">Created <span class="sort-arrows">{% if current_sort == 'created_at' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for issue in issues %}
                 <tr>
+                    <td>{{ issue.id }}</td>
                     <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.get_issue_type_display }}</span></td>
-                    <td>{{ issue.subject }}</td>
+                    <td>
+                        <a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a>
+                        {% if issue.deadline %}
+                        <svg class="list-deadline-icon status-{{ issue.deadline_status }}" xmlns="http://www.w3.org/2000/svg"
+                            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        {% endif %}
+                    </td>
                     <td><span class="badge badge-status-{{ issue.status }}">{{ issue.get_status_display }}</span></td>
                     <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
                     <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
                     <td>{{ issue.assigned_to|default:"-" }}</td>
                     <td>{{ issue.created_at|date:"d/m/Y" }}</td>
+                    <td>
+                        <a href="{% url 'issue_delete' issue.pk %}"
+                            style="color: #c90000; text-decoration: none; font-weight: bold;">Delete</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -122,4 +140,11 @@
     </div>
 
 </div>
+
+<style>
+    .list-deadline-icon { vertical-align: text-bottom; margin-left: 6px; }
+    .list-deadline-icon.status-red { color: #de3b53; }
+    .list-deadline-icon.status-orange { color: #f39200; }
+    .list-deadline-icon.status-green { color: #9bc300; }
+</style>
 {% endblock %}

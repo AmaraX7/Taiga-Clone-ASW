@@ -39,8 +39,10 @@ body {
 
 /* Issues header */
 .issues-header {
-    margin-bottom: 0;
-    padding: 20px 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
 }
 
 .issues-header h1 {
@@ -340,6 +342,7 @@ body {
     color: #008aa8;
 }
 
+
 /* Table */
 .issues-table {
     width: 100%;
@@ -369,6 +372,16 @@ body {
 
 .issues-table tbody tr:hover {
     background: #eceff4;
+}
+
+.issue-link {
+    color: #008aa8;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.issue-link:hover {
+    text-decoration: underline;
 }
 
 .no-issues {
@@ -474,4 +487,81 @@ body {
     color: #e44057;
     font-size: 13px;
     margin-top: 4px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.detail-card {
+    background: #fff;
+    padding: 16px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.detail-card h2 {
+    margin-bottom: 12px;
+    color: #2e3440;
+}
+
+.detail-card p {
+    margin-bottom: 8px;
+}
+
+.inline-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.inline-form input,
+.inline-form select {
+    min-width: 240px;
+}
+
+.item-list {
+    list-style: none;
+}
+
+.item-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #eceff4;
+    padding: 10px 0;
+}
+
+.item-row:first-child {
+    border-top: 0;
+}
+
+.comments-list li {
+    border-top: 1px solid #eceff4;
+    padding: 10px 0;
+}
+
+.comments-list li:first-child {
+    border-top: 0;
+}
+
+.comments-list span,
+.item-row span {
+    color: #70728f;
+    font-size: 13px;
+}
+
+.btn-danger {
+    background: #e44057;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #b83044;
 }
