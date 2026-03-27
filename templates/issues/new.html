@@ -3,30 +3,150 @@
 {% block title %}New issue{% endblock %}
 
 {% block content %}
-<div class="form-header">
+<div class="form-header" style="text-align: center;">
     <h1>New issue</h1>
 </div>
 
-<form method="post" class="issue-form">
+<form method="post" class="issue-form" style="align-items: center;">
     {% csrf_token %}
 
-    {% for field in form %}
     <div class="form-group">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}
+        <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+        {{ form.subject }}
+        {% if form.subject.errors %}
         <ul class="field-errors">
-            {% for error in field.errors %}
+            {% for error in form.subject.errors %}
             <li>{{ error }}</li>
             {% endfor %}
         </ul>
         {% endif %}
     </div>
-    {% endfor %}
+
+    <div class="form-group">
+        <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+        {{ form.description }}
+        {% if form.description.errors %}
+        <ul class="field-errors">
+            {% for error in form.description.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
 
     <div class="form-actions">
         <button type="submit" class="btn btn-new">Create</button>
         <a href="{% url 'issue_list' %}" class="btn btn-cancel">Cancel</a>
+
+        {# Clock / Deadline widget — pure CSS, no JavaScript #}
+        <div class="deadline-widget">
+            <input type="checkbox" id="deadline-toggle" name="_deadline_toggle" class="deadline-checkbox">
+            <label for="deadline-toggle" class="deadline-clock-btn" title="Set deadline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+            </label>
+
+            <div class="deadline-calendar-popup">
+                <div class="deadline-field">
+                    <label for="{{ form.deadline.id_for_label }}">{{ form.deadline.label }}</label>
+                    {{ form.deadline }}
+                    {% if form.deadline.errors %}
+                    <ul class="field-errors">
+                        {% for error in form.deadline.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </form>
+
+<style>
+    .form-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .deadline-widget {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .deadline-checkbox {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+    }
+
+    .deadline-clock-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 4px;
+        border: 1px solid #d9d9d9;
+        background: #fff;
+        color: #8a8a8a;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .deadline-clock-btn:hover,
+    .deadline-checkbox:checked~.deadline-clock-btn {
+        background: #f0fafa;
+        border-color: #40c4b5;
+        color: #40c4b5;
+    }
+
+    .deadline-calendar-popup {
+        display: none;
+        position: absolute;
+        bottom: 44px;
+        left: 0;
+        z-index: 200;
+        background: #fff;
+        border: 1px solid #d9d9d9;
+        border-radius: 6px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        padding: 16px;
+        min-width: 240px;
+    }
+
+    .deadline-checkbox:checked~.deadline-calendar-popup {
+        display: block;
+    }
+
+    .deadline-field label {
+        display: block;
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 6px;
+    }
+
+    .deadline-field input[type="date"] {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #333;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .deadline-field input[type="date"]:focus {
+        border-color: #40c4b5;
+    }
+</style>
 {% endblock %}
