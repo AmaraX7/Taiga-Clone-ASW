@@ -45,3 +45,29 @@ class Issue(models.Model):
 
     def __str__(self):
         return f"#{self.pk} {self.subject}"
+
+
+class Comment(models.Model):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='issue_comments')
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Comment #{self.pk} on issue #{self.issue_id}"
+
+
+class Attachment(models.Model):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='attachments')
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='issue_attachments')
+    file = models.FileField(upload_to='issues/attachments/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Attachment #{self.pk} on issue #{self.issue_id}"
