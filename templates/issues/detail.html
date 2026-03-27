@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Issue #{{ issue.id }}{% endblock %}
+
+{% block content %}
+<div class="issues-header">
+    <h1>#{{ issue.id }} - {{ issue.subject }}</h1>
+    <a href="{% url 'issue_list' %}" class="btn btn-cancel">Back to list</a>
+</div>
+
+<div class="detail-grid">
+    <section class="detail-card">
+        <h2>Details</h2>
+        <p><strong>Status:</strong> {{ issue.get_status_display }}</p>
+        <p><strong>Type:</strong> {{ issue.get_issue_type_display }}</p>
+        <p><strong>Priority:</strong> {{ issue.get_priority_display }}</p>
+        <p><strong>Severity:</strong> {{ issue.get_severity_display }}</p>
+        <p><strong>Created by:</strong> {{ issue.created_by }}</p>
+        <p><strong>Created at:</strong> {{ issue.created_at|date:"d/m/Y H:i" }}</p>
+        <p><strong>Description:</strong></p>
+        <p>{{ issue.description|default:"No description." }}</p>
+    </section>
+
+    <section class="detail-card">
+        <h2>Assign issue</h2>
+        <form method="post" action="{% url 'issue_assign' issue.id %}" class="inline-form">
+            {% csrf_token %}
+            {{ assign_form.assigned_to }}
+            <button type="submit" class="btn btn-new">Save assignee</button>
+        </form>
+    </section>
+
+    <section class="detail-card">
+        <h2>Attachments</h2>
+        <form method="post" action="{% url 'attachment_add' issue.id %}" enctype="multipart/form-data" class="inline-form">
+            {% csrf_token %}
+            {{ attachment_form.file }}
+            <button type="submit" class="btn btn-new">Upload</button>
+        </form>
+
+        {% if issue.attachments.all %}
+        <ul class="item-list">
+            {% for attachment in issue.attachments.all %}
+            <li class="item-row">
+                <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">{{ attachment.file.name }}</a>
+                <span>by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
+                <form method="post" action="{% url 'attachment_delete' issue.id attachment.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No attachments yet.</p>
+        {% endif %}
+    </section>
+
+    <section class="detail-card">
+        <h2>Comments</h2>
+        {% if issue.comments.all %}
+        <ul class="item-list comments-list">
+            {% for comment in issue.comments.all %}
+            <li>
+                <p>{{ comment.text }}</p>
+                <span>by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No comments yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
