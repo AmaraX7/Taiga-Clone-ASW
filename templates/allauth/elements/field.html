@@ -1,0 +1,20 @@
+{% load allauth %}
+<div class="form-group">
+  {% if attrs.type != "checkbox" %}
+    <label {% if attrs.id %}for="{{ attrs.id }}"{% endif %}>{% slot label %}{% endslot %}</label>
+  {% endif %}
+  {% if attrs.errors %}
+    <ul class="field-errors">{% for error in attrs.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+  {% endif %}
+  <input type="{{ attrs.type }}"
+    {% if attrs.required %}required{% endif %}
+    {% if attrs.name %}name="{{ attrs.name }}"{% endif %}
+    {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
+    {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
+    {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
+    {% if attrs.value is not None %}value="{{ attrs.value }}"{% endif %}
+  >
+  {% if attrs.type == "checkbox" %}
+    <label {% if attrs.id %}for="{{ attrs.id }}"{% endif %}>{% slot label %}{% endslot %}</label>
+  {% endif %}
+</div>

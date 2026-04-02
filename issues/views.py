@@ -1,12 +1,9 @@
 from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import Attachment, Comment, Issue
 from .forms import AssignIssueForm, AttachmentForm, IssueForm
-
-
-def get_default_user():
-    return User.objects.get(username='admin')
 
 
 SORTABLE_FIELDS = {
@@ -39,6 +36,7 @@ FILTER_LABELS = {
 }
 
 
+@login_required
 def issue_list(request):
     q = request.GET.get('q', '').strip()
     sort = request.GET.get('sort', 'created_at')
@@ -95,12 +93,13 @@ def issue_list(request):
     })
 
 
+@login_required
 def issue_new(request):
     if request.method == 'POST':
         form = IssueForm(request.POST)
         if form.is_valid():
             issue = form.save(commit=False)
-            issue.created_by = get_default_user()
+            issue.created_by = request.user
             issue.save()
             return redirect('issue_list')
     else:
@@ -108,6 +107,7 @@ def issue_new(request):
     return render(request, 'issues/new.html', {'form': form})
 
 
+@login_required
 def issue_delete(request, pk):
     issue = get_object_or_404(Issue, pk=pk)
     if request.method == 'POST':
@@ -116,6 +116,7 @@ def issue_delete(request, pk):
     return render(request, 'issues/delete.html', {'issue': issue})
 
 
+@login_required
 def issue_detail(request, issue_id):
     issue = get_object_or_404(
         Issue.objects.select_related('created_by', 'assigned_to').prefetch_related('attachments', 'comments__author'),
@@ -134,6 +135,7 @@ def issue_detail(request, issue_id):
     )
 
 
+@login_required
 def issue_assign(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     if request.method == 'POST':
@@ -143,6 +145,7 @@ def issue_assign(request, issue_id):
     return redirect('issue_detail', issue_id=issue.id)
 
 
+@login_required
 def attachment_add(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     if request.method == 'POST':
@@ -150,12 +153,13 @@ def attachment_add(request, issue_id):
         if form.is_valid():
             Attachment.objects.create(
                 issue=issue,
-                uploaded_by=get_default_user(),
+                uploaded_by=request.user,
                 file=form.cleaned_data['file'],
             )
     return redirect('issue_detail', issue_id=issue.id)
 
 
+@login_required
 def attachment_delete(request, issue_id, attachment_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     attachment = get_object_or_404(Attachment, pk=attachment_id, issue=issue)
@@ -165,6 +169,7 @@ def attachment_delete(request, issue_id, attachment_id):
     return redirect('issue_detail', issue_id=issue.id)
 
 
+@login_required
 def comment_add(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     if request.method == 'POST':
@@ -172,12 +177,13 @@ def comment_add(request, issue_id):
         if text:
             Comment.objects.create(
                 issue=issue,
-                author=get_default_user(),
+                author=request.user,
                 text=text
             )
     return redirect('issue_detail', issue_id=issue.id)
 
 
+@login_required
 def comment_edit(request, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
     if request.method == 'POST':
@@ -189,6 +195,7 @@ def comment_edit(request, comment_id):
     return render(request, 'issues/comment_edit.html', {'comment': comment})
 
 
+@login_required
 def comment_delete(request, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
     issue_id = comment.issue.pk

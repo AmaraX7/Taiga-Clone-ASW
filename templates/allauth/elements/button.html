@@ -1,0 +1,6 @@
+{% load allauth %}
+{% if attrs.href %}
+  <a href="{{ attrs.href }}" class="btn btn-auth">{% slot %}{% endslot %}</a>
+{% else %}
+  <button {% if attrs.type %}type="{{ attrs.type }}"{% endif %} {% if attrs.form %}form="{{ attrs.form }}"{% endif %} class="btn btn-auth">{% slot %}{% endslot %}</button>
+{% endif %}
