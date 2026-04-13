@@ -1,0 +1,69 @@
+{% comment %}
+  Reusable sortable issue table for profile tabs.
+  Context variables:
+    issues         - queryset
+    tab            - 'assigned' or 'watched'
+    sort_param     - GET param name for sort field (e.g. 'assigned_sort')
+    order_param    - GET param name for sort order (e.g. 'assigned_order')
+    current_sort   - current sort field value
+    current_order  - 'asc' or 'desc'
+    username       - profile user's username (for URL construction)
+{% endcomment %}
+{% if issues %}
+<table class="issues-table">
+    <thead>
+        <tr>
+            <th>
+                {% if current_sort == 'id' %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=id&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">#</a>
+                {% else %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=id&{{ order_param }}=asc">#</a>
+                {% endif %}
+            </th>
+            <th>
+                {% if current_sort == 'issue_type' %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=issue_type&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">Type</a>
+                {% else %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=issue_type&{{ order_param }}=asc">Type</a>
+                {% endif %}
+            </th>
+            <th>Subject</th>
+            <th>
+                {% if current_sort == 'status' %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=status&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">Status</a>
+                {% else %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=status&{{ order_param }}=asc">Status</a>
+                {% endif %}
+            </th>
+            <th>
+                {% if current_sort == 'severity' %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=severity&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">Severity</a>
+                {% else %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=severity&{{ order_param }}=asc">Severity</a>
+                {% endif %}
+            </th>
+            <th>
+                {% if current_sort == 'modified' %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=modified&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">Modified</a>
+                {% else %}
+                    <a href="?tab={{ tab }}&{{ sort_param }}=modified&{{ order_param }}=desc">Modified</a>
+                {% endif %}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for issue in issues %}
+        <tr>
+            <td><a href="{% url 'issue_detail' issue.id %}">#{{ issue.id }}</a></td>
+            <td>{{ issue.get_issue_type_display }}</td>
+            <td><a href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a></td>
+            <td>{{ issue.get_status_display }}</td>
+            <td>{{ issue.get_severity_display }}</td>
+            <td>{{ issue.modified_at|date:"d M Y" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="empty-state">No issues to display.</p>
+{% endif %}

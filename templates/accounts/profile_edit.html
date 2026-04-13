@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="issues-header">
+    <h1>Edit Profile</h1>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="issue-form">
+    {% csrf_token %}
+
+    <!-- Avatar section -->
+    <div class="form-group">
+        <label>Avatar</label>
+
+        <div class="avatar-edit-container">
+            <!-- Tracks "use default" state; submitted with the form -->
+            <input type="checkbox" id="use-default-toggle" name="use_default"
+                   class="use-default-checkbox" {% if not profile.avatar_url %}checked{% endif %}>
+
+            <!-- Preview display: toggled by checkbox via CSS -->
+            <div class="avatar-edit-preview">
+                <img id="avatar-new-preview"
+                     src="{% if profile.avatar_url %}{{ profile.avatar_url }}{% endif %}"
+                     alt="Avatar preview"
+                     class="avatar-img avatar-edit-current"
+                     {% if not profile.avatar_url %}style="display:none;"{% endif %}>
+                <div class="avatar-initials avatar-edit-default">{{ profile_user.username|first|upper }}</div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="avatar-edit-actions">
+                <label for="{{ form.avatar.id_for_label }}" class="btn btn-secondary">Change photo</label>
+                <label for="use-default-toggle" class="btn btn-use-default">Use default</label>
+            </div>
+        </div>
+
+        <!-- Hidden file input (opened by the label above) -->
+        {{ form.avatar }}
+        {% for error in form.avatar.errors %}
+            <span class="field-error">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <!-- Bio section -->
+    <div class="form-group">
+        <label for="{{ form.bio.id_for_label }}">Bio</label>
+        {{ form.bio }}
+        {% for error in form.bio.errors %}
+            <span class="field-error">{{ error }}</span>
+        {% endfor %}
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-new">Save changes</button>
+        <a href="{% url 'profile_view' profile_user.username %}" class="btn btn-cancel">Cancel</a>
+    </div>
+</form>
+
+<script>
+// Shows the selected photo as a preview before saving (presentation only, no logic)
+document.getElementById('{{ form.avatar.id_for_label }}').addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var img = document.getElementById('avatar-new-preview');
+    img.src = URL.createObjectURL(file);
+    img.style.display = 'block';
+    document.getElementById('use-default-toggle').checked = false;
+    document.querySelector('.avatar-edit-container').classList.add('has-new-photo');
+});
+</script>
+{% endblock %}

@@ -14,13 +14,23 @@
         </div>
         <div class="navbar-right">
             {% if user.is_authenticated %}
-                <span class="navbar-user">{{ user.username }}</span>
-                <form method="post" action="{% url 'account_logout' %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-nav-logout">Sign out</button>
-                </form>
-            {% else %}
-                <a href="{% url 'account_login' %}" class="btn-nav-link btn-nav-link--primary">Sign in</a>
+            <details class="navbar-dropdown">
+                <summary class="navbar-avatar-trigger">
+                    {% if user.profile.avatar_url %}
+                        <img src="{{ user.profile.avatar_url }}" alt="{{ user.username }}" class="navbar-avatar-img">
+                    {% else %}
+                        <div class="navbar-avatar-initials">{{ user.username|first|upper }}</div>
+                    {% endif %}
+                    <span class="navbar-dropdown-arrow">&#9662;</span>
+                </summary>
+                <div class="navbar-dropdown-menu">
+                    <a href="{% url 'profile_view' user.username %}" class="navbar-dropdown-item">View Profile</a>
+                    <form method="post" action="{% url 'account_logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="navbar-dropdown-item navbar-dropdown-btn">Sign out</button>
+                    </form>
+                </div>
+            </details>
             {% endif %}
         </div>
     </nav>
