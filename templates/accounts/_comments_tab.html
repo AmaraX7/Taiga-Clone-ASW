@@ -1,0 +1,26 @@
+{% if comments %}
+<ul class="item-list comments-list">
+    {% for comment in comments %}
+    <li class="comment-item" id="profile-comment-{{ comment.id }}">
+        <p class="comment-issue-ref">
+            <a href="{% url 'issue_detail' comment.issue.id %}#comment-{{ comment.id }}">
+                #{{ comment.issue.id }} {{ comment.issue.subject }}
+            </a>
+            <span class="comment-meta">{{ comment.created_at|date:"d M Y H:i" }}</span>
+        </p>
+        <p class="comment-text">{{ comment.text }}</p>
+        {% if is_own %}
+        <div class="comment-actions">
+            <a href="{% url 'comment_edit' comment.id %}" class="btn btn-secondary">Edit</a>
+            <form method="post" action="{% url 'comment_delete' comment.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="empty-state">No comments yet.</p>
+{% endif %}

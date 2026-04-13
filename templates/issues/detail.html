@@ -22,6 +22,32 @@
     </section>
 
     <section class="detail-card">
+        <h2>Watchers</h2>
+        {% if is_watching %}
+            <form method="post" action="{% url 'watcher_remove' issue.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-cancel">Unwatch</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'watcher_add' issue.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-new">Watch</button>
+            </form>
+        {% endif %}
+        {% if watcher_list %}
+        <ul class="item-list" style="margin-top: 10px;">
+            {% for w in watcher_list %}
+            <li class="item-row">
+                <a href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No watchers yet.</p>
+        {% endif %}
+    </section>
+
+    <section class="detail-card">
         <h2>Assign issue</h2>
         <form method="post" action="{% url 'issue_assign' issue.id %}" class="inline-form">
             {% csrf_token %}
@@ -68,7 +94,7 @@
         {% if issue.comments.all %}
         <ul class="item-list comments-list">
             {% for comment in issue.comments.all %}
-            <li class="comment-item">
+            <li class="comment-item" id="comment-{{ comment.id }}">
                 <p>{{ comment.text }}</p>
                 <span class="comment-meta">by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i" }}</span>
                 {% if comment.modified_at != comment.created_at %}

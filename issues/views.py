@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Attachment, Comment, Issue
+from .models import Attachment, Comment, Issue, Watcher
 from .forms import AssignIssueForm, AttachmentForm, IssueForm
 
 
@@ -119,9 +119,12 @@ def issue_delete(request, pk):
 @login_required
 def issue_detail(request, issue_id):
     issue = get_object_or_404(
-        Issue.objects.select_related('created_by', 'assigned_to').prefetch_related('attachments', 'comments__author'),
+        Issue.objects.select_related('created_by', 'assigned_to')
+                     .prefetch_related('attachments', 'comments__author', 'watchers__user'),
         pk=issue_id,
     )
+    is_watching  = issue.watchers.filter(user=request.user).exists()
+    watcher_list = issue.watchers.select_related('user').all()
     assign_form = AssignIssueForm(instance=issue)
     attachment_form = AttachmentForm()
     return render(
@@ -131,8 +134,26 @@ def issue_detail(request, issue_id):
             'issue': issue,
             'assign_form': assign_form,
             'attachment_form': attachment_form,
+            'is_watching': is_watching,
+            'watcher_list': watcher_list,
         },
     )
+
+
+@login_required
+def watcher_add(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+    if request.method == 'POST':
+        Watcher.objects.get_or_create(issue=issue, user=request.user)
+    return redirect('issue_detail', issue_id=issue_id)
+
+
+@login_required
+def watcher_remove(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+    if request.method == 'POST':
+        Watcher.objects.filter(issue=issue, user=request.user).delete()
+    return redirect('issue_detail', issue_id=issue_id)
 
 
 @login_required

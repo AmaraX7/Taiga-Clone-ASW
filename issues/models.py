@@ -42,6 +42,7 @@ class Issue(models.Model):
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_issues')
     created_by  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_issues')
     created_at  = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -91,3 +92,16 @@ class Attachment(models.Model):
 
     def __str__(self):
         return f"Attachment #{self.pk} on issue #{self.issue_id}"
+
+
+class Watcher(models.Model):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name='watchers')
+    user  = models.ForeignKey(User,  on_delete=models.CASCADE, related_name='watched_issues')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('issue', 'user')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} watching #{self.issue_id}"

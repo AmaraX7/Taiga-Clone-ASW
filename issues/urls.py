@@ -16,4 +16,6 @@ urlpatterns = [
     path('issues/<int:issue_id>/comments/add/', views.comment_add, name='comment_add'),
     path('comments/<int:comment_id>/edit/', views.comment_edit, name='comment_edit'),
     path('comments/<int:comment_id>/delete/', views.comment_delete, name='comment_delete'),
+    path('issues/<int:issue_id>/watch/',   views.watcher_add,    name='watcher_add'),
+    path('issues/<int:issue_id>/unwatch/', views.watcher_remove, name='watcher_remove'),
 ]
