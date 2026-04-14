@@ -9,10 +9,16 @@ class IssueForm(forms.ModelForm):
         widget=forms.DateInput(attrs={'type': 'date'}),
         label='Deadline',
     )
+    assigned_to = forms.ModelChoiceField(
+        queryset=User.objects.all(),
+        required=False,
+        empty_label='Unassigned',
+        label='Assign to',
+    )
 
     class Meta:
         model = Issue
-        fields = ['subject', 'description', 'deadline']
+        fields = ['subject', 'description', 'deadline', 'assigned_to']
 
 
 class AssignIssueForm(forms.ModelForm):
