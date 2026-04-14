@@ -115,12 +115,19 @@ if STORAGE_BACKEND == 's3':
         raise ImproperlyConfigured(
             'STORAGE_BACKEND is set to s3 but AWS_STORAGE_BUCKET_NAME is empty.'
         )
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STORAGES = {
+        'default': {'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
 elif STORAGE_BACKEND == 'local':
     if not DEBUG:
         raise ImproperlyConfigured(
             'Production requires external storage. Set STORAGE_BACKEND=s3 and configure AWS variables.'
         )
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
 else:
     raise ImproperlyConfigured(
         'Invalid STORAGE_BACKEND. Supported values are: local, s3.'
