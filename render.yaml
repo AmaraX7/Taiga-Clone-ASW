@@ -9,6 +9,8 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+      - key: STORAGE_BACKEND
+        value: "s3"
       - key: DB_NAME
         fromDatabase:
           name: projecte-asw-db

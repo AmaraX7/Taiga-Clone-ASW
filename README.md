@@ -107,6 +107,44 @@ docker-compose up
 
 ---
 
+## CI/CD (evitar pujar canvis trencats)
+
+Hi ha un workflow de GitHub Actions a `.github/workflows/ci.yml` que executa:
+- `python manage.py check`
+- `python manage.py makemigrations --check --dry-run`
+- `python manage.py test`
+
+Per bloquejar merges directes a `develop`:
+1. GitHub repo → **Settings** → **Branches** → **Add branch protection rule**
+2. Branch name pattern: `develop`
+3. Activa **Require a pull request before merging**
+4. Activa **Require status checks to pass before merging**
+5. Selecciona el check de CI del workflow
+
+Amb això, no es pot fer merge si la pipeline falla.
+
+---
+
+## Arxius externs (attachments i avatars) en producció
+
+El projecte guarda `attachments` i `avatars` en el mateix backend de Django Storage.
+
+- En **local**: `STORAGE_BACKEND=local`
+- En **producció**: `STORAGE_BACKEND=s3`
+
+Variables requerides per S3:
+- `STORAGE_BACKEND=s3`
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_STORAGE_BUCKET_NAME`
+- `AWS_S3_REGION_NAME`
+
+Important:
+- Si `DEBUG=False` i no hi ha backend extern configurat, l'app fallarà en arrencar per evitar pujar fitxers a disc local en producció.
+- Si useu AWS Academy, recordeu que les credencials caduquen i s'han de renovar periòdicament.
+
+---
+
 ## Estructura del projecte
 ```
 ├── config/            # Configuració Django (settings, urls)
