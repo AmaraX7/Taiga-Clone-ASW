@@ -101,6 +101,7 @@ SOCIALACCOUNT_PROVIDERS = {
 STORAGE_BACKEND = config('STORAGE_BACKEND', default='').strip().lower()
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default='')
+AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN', default='')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='')
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='eu-west-1')
 AWS_DEFAULT_ACL = 'private'

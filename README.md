@@ -136,12 +136,22 @@ Variables requerides per S3:
 - `STORAGE_BACKEND=s3`
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN` (obligatori si les credencials són temporals, com AWS Academy)
 - `AWS_STORAGE_BUCKET_NAME`
 - `AWS_S3_REGION_NAME`
 
 Important:
 - Si `DEBUG=False` i no hi ha backend extern configurat, l'app fallarà en arrencar per evitar pujar fitxers a disc local en producció.
 - Si useu AWS Academy, recordeu que les credencials caduquen i s'han de renovar periòdicament.
+
+### Renovació de credencials AWS Academy a Render
+Quan caduquin les credencials temporals:
+1. Aconseguiu un nou `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` i `AWS_SESSION_TOKEN`.
+2. A Render, aneu al servei web i actualitzeu aquests 3 env vars.
+3. Reviseu també `AWS_STORAGE_BUCKET_NAME` i `AWS_S3_REGION_NAME`.
+4. Feu un redeploy (normalment Render el llança automàticament en desar env vars).
+
+Si `AWS_SESSION_TOKEN` ha caducat, les pujades d'attachments/avatars deixaran de funcionar fins que es renovin les variables.
 
 ---
 

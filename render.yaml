@@ -45,6 +45,8 @@ services:
         value: ""
       - key: AWS_SECRET_ACCESS_KEY
         value: ""
+      - key: AWS_SESSION_TOKEN
+        value: ""
       - key: AWS_STORAGE_BUCKET_NAME
         value: ""
       - key: AWS_S3_REGION_NAME
