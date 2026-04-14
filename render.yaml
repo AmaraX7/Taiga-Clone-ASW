@@ -9,6 +9,8 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+      - key: STORAGE_BACKEND
+        value: "s3"
       - key: DB_NAME
         fromDatabase:
           name: projecte-asw-db
@@ -42,6 +44,8 @@ services:
       - key: AWS_ACCESS_KEY_ID
         value: ""
       - key: AWS_SECRET_ACCESS_KEY
+        value: ""
+      - key: AWS_SESSION_TOKEN
         value: ""
       - key: AWS_STORAGE_BUCKET_NAME
         value: ""
