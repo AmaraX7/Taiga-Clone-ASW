@@ -14,40 +14,30 @@
     <thead>
         <tr>
             <th>
-                {% if current_sort == 'id' %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=id&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">#</a>
-                {% else %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=id&{{ order_param }}=asc">#</a>
-                {% endif %}
+                <a href="?tab={{ tab }}&{{ sort_param }}=id&{{ order_param }}={% if current_sort == 'id' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'id' %}active{% endif %}">
+                    # <span class="sort-arrows">{% if current_sort == 'id' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
             </th>
             <th>
-                {% if current_sort == 'issue_type' %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=issue_type&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">Type</a>
-                {% else %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=issue_type&{{ order_param }}=asc">Type</a>
-                {% endif %}
+                <a href="?tab={{ tab }}&{{ sort_param }}=issue_type&{{ order_param }}={% if current_sort == 'issue_type' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">
+                    Type <span class="sort-arrows">{% if current_sort == 'issue_type' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
             </th>
             <th>Subject</th>
             <th>
-                {% if current_sort == 'status' %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=status&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">Status</a>
-                {% else %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=status&{{ order_param }}=asc">Status</a>
-                {% endif %}
+                <a href="?tab={{ tab }}&{{ sort_param }}=status&{{ order_param }}={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">
+                    Status <span class="sort-arrows">{% if current_sort == 'status' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
             </th>
             <th>
-                {% if current_sort == 'severity' %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=severity&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">Severity</a>
-                {% else %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=severity&{{ order_param }}=asc">Severity</a>
-                {% endif %}
+                <a href="?tab={{ tab }}&{{ sort_param }}=severity&{{ order_param }}={% if current_sort == 'severity' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'severity' %}active{% endif %}">
+                    Severity <span class="sort-arrows">{% if current_sort == 'severity' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
             </th>
             <th>
-                {% if current_sort == 'modified' %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=modified&{{ order_param }}={% if current_order == 'asc' %}desc{% else %}asc{% endif %}">Modified</a>
-                {% else %}
-                    <a href="?tab={{ tab }}&{{ sort_param }}=modified&{{ order_param }}=desc">Modified</a>
-                {% endif %}
+                <a href="?tab={{ tab }}&{{ sort_param }}=modified&{{ order_param }}={% if current_sort == 'modified' and current_order == 'desc' %}asc{% else %}desc{% endif %}" class="sort-header {% if current_sort == 'modified' %}active{% endif %}">
+                    Modified <span class="sort-arrows">{% if current_sort == 'modified' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
             </th>
         </tr>
     </thead>
