@@ -33,24 +33,32 @@ services:
           property: port
       - key: DJANGO_SUPERUSER_USERNAME
         value: ""
+        sync: false
       - key: DJANGO_SUPERUSER_EMAIL
         value: ""
+        sync: false
       - key: DJANGO_SUPERUSER_PASSWORD
         value: ""
+        sync: false
       - key: GOOGLE_CLIENT_ID
         value: ""
       - key: GOOGLE_CLIENT_SECRET
         value: ""
       - key: AWS_ACCESS_KEY_ID
         value: ""
+        sync: false
       - key: AWS_SECRET_ACCESS_KEY
         value: ""
+        sync: false
       - key: AWS_SESSION_TOKEN
         value: ""
+        sync: false
       - key: AWS_STORAGE_BUCKET_NAME
         value: ""
+        sync: false
       - key: AWS_S3_REGION_NAME
-        value: "eu-west-1"
+        value: "us-east-1"
+        sync: false
 
 databases:
   - name: projecte-asw-db
