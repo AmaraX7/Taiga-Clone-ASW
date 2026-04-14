@@ -10,6 +10,7 @@ class IssueFeatureTests(TestCase):
 	def setUp(self):
 		self.creator = User.objects.create_user(username='creator')
 		self.assignee = User.objects.create_user(username='assignee')
+		self.client.force_login(self.creator)
 		self.issue = Issue.objects.create(
 			subject='Sample issue',
 			description='Sample description',
