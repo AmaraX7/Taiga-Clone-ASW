@@ -27,7 +27,7 @@ jobs:
 
     env:
       SECRET_KEY: ci-secret-key
-      DEBUG: "False"
+      DEBUG: "True"
       STORAGE_BACKEND: local
       DB_NAME: taiga_clone
       DB_USER: postgres
