@@ -4,117 +4,803 @@
 
 {% block content %}
 <div class="issues-header">
-    <h1>#{{ issue.id }} - {{ issue.subject }}</h1>
+    <h1>
+        #{{ issue.id }} {{ issue.subject }}
+        {% if issue.deadline %}
+        <span class="deadline-clock-display status-{{ issue.deadline_status }}"
+            title="Deadline: {{ issue.deadline|date:'d M Y' }}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+            </svg>
+        </span>
+        {% else %}
+        <span class="deadline-clock-display no-deadline" title="No deadline set">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+            </svg>
+        </span>
+        {% endif %}
+    </h1>
     <a href="{% url 'issue_list' %}" class="btn btn-cancel">Back to list</a>
 </div>
 
-<div class="detail-grid">
-    <section class="detail-card">
-        <h2>Details</h2>
-        <p><strong>Status:</strong> {{ issue.get_status_display }}</p>
-        <p><strong>Type:</strong> {{ issue.get_issue_type_display }}</p>
-        <p><strong>Priority:</strong> {{ issue.get_priority_display }}</p>
-        <p><strong>Severity:</strong> {{ issue.get_severity_display }}</p>
-        <p><strong>Created by:</strong> {{ issue.created_by }}</p>
-        <p><strong>Created at:</strong> {{ issue.created_at|date:"d/m/Y H:i" }}</p>
-        <p><strong>Description:</strong></p>
-        <p>{{ issue.description|default:"No description." }}</p>
-    </section>
+<div class="issue-detail-layout">
 
-    <section class="detail-card">
-        <h2>Watchers</h2>
-        {% if is_watching %}
-        <form method="post" action="{% url 'watcher_remove' issue.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-cancel">Unwatch</button>
-        </form>
-        {% else %}
-        <form method="post" action="{% url 'watcher_add' issue.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-new">Watch</button>
-        </form>
-        {% endif %}
-        {% if watcher_list %}
-        <ul class="item-list" style="margin-top: 10px;">
-            {% for w in watcher_list %}
-            <li class="item-row">
-                <a href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No watchers yet.</p>
-        {% endif %}
-    </section>
+    <!-- COLUMNA ESQUERRA: contingut principal -->
+    <div class="issue-detail-main">
 
-    <section class="detail-card">
-        <h2>Assign issue</h2>
-        <form method="post" action="{% url 'issue_assign' issue.id %}" class="inline-form">
-            {% csrf_token %}
-            {{ assign_form.assigned_to }}
-            <button type="submit" class="btn btn-new">Save</button>
-        </form>
-    </section>
+        <!-- Capçalera: tag + creador -->
+        <div class="issue-detail-meta-bar">
+            <span class="issue-detail-label">ISSUE</span>
+            <span class="issue-detail-created">
+                Created by <strong>{{ issue.created_by }}</strong>
+                &nbsp;{{ issue.created_at|date:"d M Y H:i" }}
+            </span>
+        </div>
 
-    <section class="detail-card">
-        <h2>Attachments</h2>
-        <form method="post" action="{% url 'attachment_add' issue.id %}" enctype="multipart/form-data"
-            class="inline-form">
-            {% csrf_token %}
-            {{ attachment_form.file }}
-            <button type="submit" class="btn btn-new">Upload</button>
-        </form>
+        <!-- Descripció -->
+        <div class="issue-detail-description">
+            <p>{{ issue.description|default:"No description." }}</p>
+        </div>
 
-        {% if issue.attachments.all %}
-        <ul class="item-list">
-            {% for attachment in issue.attachments.all %}
-            <li class="item-row">
-                <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">{{ attachment.file.name }}</a>
-                <span>by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
-                <form method="post" action="{% url 'attachment_delete' issue.id attachment.id %}">
+        <!-- Attachments -->
+        <div class="issue-detail-section">
+            <div class="issue-section-header">
+                <span>{{ issue.attachments.count }} Attachment{{ issue.attachments.count|pluralize }}</span>
+                <form method="post" action="{% url 'attachment_add' issue.id %}" enctype="multipart/form-data"
+                    class="attachment-upload-form">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    {{ attachment_form.file }}
+                    <button type="submit" class="btn-icon-add" title="Add attachment">+</button>
                 </form>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No attachments yet.</p>
-        {% endif %}
-    </section>
-
-    <section class="detail-card">
-        <h2>Comments</h2>
-
-        <form method="post" action="{% url 'comment_add' issue.id %}" class="inline-form">
-            {% csrf_token %}
-            <textarea name="text" placeholder="Add a comment..." rows="4" required></textarea>
-            <button type="submit" class="btn btn-new">Post comment</button>
-        </form>
-
-        {% if issue.comments.all %}
-        <ul class="item-list comments-list">
-            {% for comment in issue.comments.all %}
-            <li class="comment-item" id="comment-{{ comment.id }}">
-                <p>{{ comment.text }}</p>
-                <span class="comment-meta">by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i" }}</span>
-                {% if comment.modified_at != comment.created_at %}
-                <span class="comment-meta">(edited {{ comment.modified_at|date:"d/m/Y H:i" }})</span>
-                {% endif %}
-                <div class="comment-actions">
-                    <a href="{% url 'comment_edit' comment.id %}" class="btn btn-secondary">Edit</a>
-                    <form method="post" action="{% url 'comment_delete' comment.id %}" style="display: inline;">
+            </div>
+            {% if issue.attachments.all %}
+            <ul class="item-list" style="margin-top: 8px;">
+                {% for attachment in issue.attachments.all %}
+                <li class="item-row">
+                    <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">{{ attachment.file.name }}</a>
+                    <span class="comment-meta">by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y
+                        H:i" }}</span>
+                    <form method="post" action="{% url 'attachment_delete' issue.id attachment.id %}">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger"
-                            onclick="return confirm('Are you sure?')">Delete</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+
+        <!-- Comments -->
+        <div class="issue-detail-section">
+            <div class="issue-comments-tabs">
+                <span class="tab active">{{ issue.comments.count }} Comment{{ issue.comments.count|pluralize }}</span>
+            </div>
+
+            <form method="post" action="{% url 'comment_add' issue.id %}" class="comment-form">
+                {% csrf_token %}
+                <textarea name="text" placeholder="Type a new comment here" rows="4" required></textarea>
+                <button type="submit" class="btn btn-new">Post comment</button>
+            </form>
+
+            {% if issue.comments.all %}
+            <ul class="item-list comments-list" style="margin-top: 16px;">
+                {% for comment in issue.comments.all %}
+                <li class="comment-item" id="comment-{{ comment.id }}">
+                    <p>{{ comment.text }}</p>
+                    <span class="comment-meta">by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i"
+                        }}</span>
+                    {% if comment.modified_at != comment.created_at %}
+                    <span class="comment-meta">(edited {{ comment.modified_at|date:"d/m/Y H:i" }})</span>
+                    {% endif %}
+                    <div class="comment-actions">
+                        <a href="{% url 'comment_edit' comment.id %}" class="btn btn-secondary">Edit</a>
+                        <form method="post" action="{% url 'comment_delete' comment.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- COLUMNA DRETA: sidebar de metadades -->
+    <aside class="issue-detail-sidebar">
+
+        <!-- Status badge -->
+        <div class="sidebar-status-bar">
+            <span class="badge badge-status-{{ issue.status }} badge-status-large">{{ issue.get_status_display }}</span>
+        </div>
+
+        <!-- Metadata fields -->
+        <div class="sidebar-field">
+            <span class="sidebar-label">type</span>
+            <span class="sidebar-value">
+                {{ issue.get_issue_type_display }}
+                <span class="sidebar-dot sidebar-dot-type-{{ issue.issue_type }}"></span>
+            </span>
+        </div>
+        <div class="sidebar-field">
+            <span class="sidebar-label">severity</span>
+            <span class="sidebar-value">
+                {{ issue.get_severity_display }}
+                <span class="sidebar-dot sidebar-dot-severity-{{ issue.severity }}"></span>
+            </span>
+        </div>
+        <div class="sidebar-field">
+            <span class="sidebar-label">priority</span>
+            <span class="sidebar-value">
+                {{ issue.get_priority_display }}
+                <span class="sidebar-dot sidebar-dot-priority-{{ issue.priority }}"></span>
+            </span>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <!-- Assigned -->
+        <div class="sidebar-section">
+            <span class="sidebar-section-title">ASSIGNED</span>
+            {% if issue.assigned_to %}
+            <div class="sidebar-user">
+                <span class="sidebar-avatar">{{ issue.assigned_to.username|slice:":1"|upper }}</span>
+                <span>{{ issue.assigned_to.username }}</span>
+            </div>
+            {% endif %}
+            <form method="post" action="{% url 'issue_assign' issue.id %}" class="sidebar-assign-form">
+                {% csrf_token %}
+                {{ assign_form.assigned_to }}
+                <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+            </form>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <!-- Watchers -->
+        <div class="sidebar-section">
+            <span class="sidebar-section-title">WATCHERS</span>
+            {% if watcher_list %}
+            <ul class="sidebar-watcher-list">
+                {% for w in watcher_list %}
+                <li>
+                    <span class="sidebar-avatar">{{ w.user.username|slice:":1"|upper }}</span>
+                    <a href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="sidebar-watch-actions">
+                {% if is_watching %}
+                <form method="post" action="{% url 'watcher_remove' issue.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-cancel btn-sm">Unwatch</button>
+                </form>
+                {% else %}
+                <form method="post" action="{% url 'watcher_add' issue.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary btn-sm">Watch</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <div class="sidebar-actions-row">
+
+            <div class="sidebar-action-deadline-wrapper">
+                <input type="checkbox" id="deadline-popup-toggle" class="deadline-popup-checkbox">
+                <label for="deadline-popup-toggle"
+                    class="sidebar-icon-btn {% if issue.deadline %}deadline-color-{{ issue.deadline_status }}{% else %}sidebar-icon-muted{% endif %}"
+                    title="{% if issue.deadline %}Deadline: {{ issue.deadline|date:'d M Y' }}{% else %}Set deadline{% endif %}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                </label>
+
+                <!-- Popup "Set due date" -->
+                <div class="deadline-popup">
+                    <div class="deadline-popup-header">
+                        <span class="deadline-popup-title">Set due date</span>
+                        <label for="deadline-popup-toggle" class="deadline-popup-close" title="Close">&#x2715;</label>
+                    </div>
+                    <form method="post" action="{% url 'issue_set_deadline' issue.id %}" class="deadline-popup-form">
+                        {% csrf_token %}
+                        <input type="date" name="deadline" class="deadline-popup-input"
+                            value="{{ issue.deadline|date:'Y-m-d' }}" placeholder="dd/mm/yyyy">
+                        <div class="deadline-popup-presets">
+
+                            <span class="deadline-preset">In one week</span>
+                            <span class="deadline-preset">In two weeks</span>
+                            <span class="deadline-preset">In one month</span>
+                            <span class="deadline-preset">In three months</span>
+                        </div>
+                        <button type="submit" class="deadline-popup-save">SAVE</button>
+                        {% if issue.deadline %}
+                        <button type="submit" name="deadline" value="" class="deadline-popup-remove">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            </svg>
+                        </button>
+                        {% endif %}
                     </form>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No comments yet.</p>
-        {% endif %}
-    </section>
+            </div>
+
+
+            <span class="sidebar-icon-btn" title="Edit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+            </span>
+            <span class="sidebar-icon-btn" title="Link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+            </span>
+            <span class="sidebar-icon-btn" title="Block">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+            </span>
+
+            <!-- Delete: icona papelera grisa que enllaça a la pàgina de confirmació -->
+            <a href="{% url 'issue_delete' issue.pk %}" class="sidebar-icon-btn" title="Delete issue">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                </svg>
+            </a>
+
+        </div>
+
+    </aside>
+
 </div>
+
+<style>
+    /* ── LAYOUT ── */
+    .issue-detail-layout {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 24px;
+        align-items: start;
+        margin-top: 16px;
+    }
+
+    /* ── MAIN ── */
+    .issue-detail-main {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .issue-detail-meta-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0 12px;
+        border-bottom: 1px solid #e8e8e8;
+        margin-bottom: 16px;
+    }
+
+    .issue-detail-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        color: #9b9fb0;
+        text-transform: uppercase;
+    }
+
+    .issue-detail-created {
+        font-size: 0.83rem;
+        color: #6b7280;
+    }
+
+    .issue-detail-description {
+        padding: 16px 0 24px;
+        font-size: 0.95rem;
+        color: #374151;
+        line-height: 1.6;
+        border-bottom: 1px solid #e8e8e8;
+    }
+
+    .issue-detail-section {
+        padding: 16px 0;
+        border-bottom: 1px solid #e8e8e8;
+    }
+
+    .issue-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #6b7280;
+        background: #f6f7fb;
+        padding: 8px 12px;
+        border-radius: 4px;
+    }
+
+    .btn-icon-add {
+        background: #70b8d4;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        width: 24px;
+        height: 24px;
+        font-size: 1.1rem;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .attachment-upload-form {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .attachment-upload-form input[type="file"] {
+        font-size: 0.8rem;
+    }
+
+    .issue-comments-tabs {
+        margin-bottom: 12px;
+    }
+
+    .tab {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #374151;
+        border-bottom: 2px solid #374151;
+        padding-bottom: 4px;
+        display: inline-block;
+    }
+
+    .comment-form textarea {
+        width: 100%;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 0.92rem;
+        resize: vertical;
+        box-sizing: border-box;
+        color: #374151;
+    }
+
+    .comment-form button {
+        margin-top: 8px;
+    }
+
+    /* ── DEADLINE CLOCK al títol ── */
+    .deadline-clock-display {
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        margin-right: 4px;
+    }
+
+    .deadline-clock-display.no-deadline {
+        opacity: 0.3;
+    }
+
+    .deadline-clock-display.status-red {
+        color: #de3b53;
+    }
+
+    .deadline-clock-display.status-orange {
+        color: #f39200;
+    }
+
+    .deadline-clock-display.status-green {
+        color: #9bc300;
+    }
+
+    .issue-detail-sidebar {
+        background: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .sidebar-status-bar {
+        padding: 14px 16px;
+        border-bottom: 1px solid #e8e8e8;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .badge-status-large {
+        font-size: 0.82rem;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-weight: 700;
+        letter-spacing: .06em;
+    }
+
+    .sidebar-field {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.87rem;
+    }
+
+    .sidebar-label {
+        color: #9b9fb0;
+        font-size: 0.82rem;
+        text-transform: lowercase;
+    }
+
+    .sidebar-value {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .sidebar-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .sidebar-dot-type-bug {
+        background: #e11d48;
+    }
+
+    .sidebar-dot-type-question {
+        background: #8b5cf6;
+    }
+
+    .sidebar-dot-type-feature {
+        background: #2563eb;
+    }
+
+    .sidebar-dot-type-enhancement {
+        background: #0891b2;
+    }
+
+    .sidebar-dot-severity-critical {
+        background: #b91c1c;
+    }
+
+    .sidebar-dot-severity-high {
+        background: #ea580c;
+    }
+
+    .sidebar-dot-severity-normal {
+        background: #16a34a;
+    }
+
+    .sidebar-dot-severity-low {
+        background: #ca8a04;
+    }
+
+    .sidebar-dot-severity-wishlist {
+        background: #6b7280;
+    }
+
+    .sidebar-dot-severity-minor {
+        background: #ca8a04;
+    }
+
+    .sidebar-dot-severity-important {
+        background: #ea580c;
+    }
+
+    .sidebar-dot-priority-high {
+        background: #ef4444;
+    }
+
+    .sidebar-dot-priority-normal {
+        background: #22c55e;
+    }
+
+    .sidebar-dot-priority-low {
+        background: #eab308;
+    }
+
+    .sidebar-divider {
+        margin: 0;
+        border: none;
+        border-top: 1px solid #e8e8e8;
+    }
+
+    .sidebar-section {
+        padding: 12px 16px;
+    }
+
+    .sidebar-section-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        color: #9b9fb0;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .sidebar-user,
+    .sidebar-watcher-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.88rem;
+        color: #374151;
+        margin-bottom: 6px;
+        list-style: none;
+    }
+
+    .sidebar-watcher-list {
+        padding: 0;
+        margin: 0 0 8px;
+    }
+
+    .sidebar-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #70b8d4;
+        color: #fff;
+        font-size: 0.78rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .sidebar-assign-form {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+
+    .sidebar-assign-form select {
+        flex: 1;
+        font-size: 0.85rem;
+        padding: 4px 6px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+    }
+
+    .sidebar-watch-actions {
+        margin-top: 4px;
+    }
+
+    .sidebar-actions-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 12px 16px;
+        gap: 4px;
+        border-radius: 0 0 8px 8px;
+    }
+
+    .sidebar-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #f1f2f4;
+        color: #008e9b;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.15s, color 0.15s;
+        flex-shrink: 0;
+    }
+
+    .sidebar-icon-btn:hover {
+        background: #e3e5ea;
+        color: #008e9b;
+    }
+
+    .sidebar-icon-muted {
+        opacity: 0.75;
+    }
+
+    .deadline-color-red {
+        color: #de3b53 !important;
+        opacity: 1;
+    }
+
+    .deadline-color-orange {
+        color: #f39200 !important;
+        opacity: 1;
+    }
+
+    .deadline-color-green {
+        color: #9bc300 !important;
+        opacity: 1;
+    }
+
+    .deadline-popup-checkbox {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+    }
+
+    .sidebar-action-deadline-wrapper {
+        position: relative;
+        display: inline-flex;
+    }
+
+    .deadline-popup {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        transform: none;
+        z-index: 300;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+        padding: 20px 24px;
+        min-width: 320px;
+        text-align: left;
+    }
+
+    .deadline-popup-checkbox:checked~.deadline-popup {
+        display: block;
+    }
+
+    .deadline-popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .deadline-popup-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #22223b;
+    }
+
+    .deadline-popup-close {
+        cursor: pointer;
+        color: #9b9fb0;
+        font-size: 1.1rem;
+        line-height: 1;
+        padding: 4px;
+        border-radius: 4px;
+        transition: color 0.15s;
+    }
+
+    .deadline-popup-close:hover {
+        color: #374151;
+    }
+
+    .deadline-popup-input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        color: #374151;
+        box-sizing: border-box;
+        margin-bottom: 12px;
+        outline: none;
+    }
+
+    .deadline-popup-input:focus {
+        border-color: #40c4b5;
+    }
+
+    .deadline-popup-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .deadline-preset {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 20px;
+        color: #6b7280;
+        background: #f9f9f9;
+        cursor: default;
+    }
+
+    .deadline-popup-save {
+        display: block;
+        width: 100%;
+        padding: 11px;
+        background: #40c4b5;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .deadline-popup-save:hover {
+        background: #30b0a0;
+    }
+
+    .deadline-popup-remove {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 10px auto 0;
+        background: none;
+        border: none;
+        color: #9b9fb0;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: color 0.15s;
+    }
+
+    .deadline-popup-remove:hover {
+        color: #e84057;
+    }
+
+    .btn-sm {
+        font-size: 0.82rem;
+        padding: 4px 10px;
+    }
+
+    @media (max-width: 768px) {
+        .issue-detail-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .issue-detail-sidebar {
+            order: -1;
+        }
+
+        .deadline-popup {
+            left: 0;
+            transform: none;
+        }
+    }
+</style>
+
 {% endblock %}

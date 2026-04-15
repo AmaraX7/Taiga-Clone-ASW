@@ -96,7 +96,7 @@
                     <th><a href="{{ url_assigned }}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">Assigned to <span class="sort-arrows">{% if current_sort == 'assigned_to' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'created_at' current_sort current_order as url_created %}
                     <th><a href="{{ url_created }}" class="sort-header {% if current_sort == 'created_at' %}active{% endif %}">Created <span class="sort-arrows">{% if current_sort == 'created_at' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
-                    <th>Actions</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -120,10 +120,7 @@
                     <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
                     <td>{{ issue.assigned_to|default:"-" }}</td>
                     <td>{{ issue.created_at|date:"d/m/Y" }}</td>
-                    <td>
-                        <a href="{% url 'issue_delete' issue.pk %}"
-                            style="color: #c90000; text-decoration: none; font-weight: bold;">Delete</a>
-                    </td>
+
                 </tr>
                 {% endfor %}
             </tbody>
