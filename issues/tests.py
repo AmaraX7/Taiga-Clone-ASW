@@ -60,3 +60,59 @@ class IssueFeatureTests(TestCase):
 
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, 'This is a comment in the issue.')
+
+	def test_create_issue_from_new_view(self):
+		response = self.client.post(
+			reverse('issue_new'),
+			{
+				'subject': 'Created from test',
+				'description': 'Issue body',
+				'assigned_to': self.assignee.id,
+			},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		created_issue = Issue.objects.get(subject='Created from test')
+		self.assertEqual(created_issue.description, 'Issue body')
+		self.assertEqual(created_issue.created_by, self.creator)
+		self.assertEqual(created_issue.assigned_to, self.assignee)
+
+	def test_add_comment(self):
+		response = self.client.post(
+			reverse('comment_add', args=[self.issue.id]),
+			{'text': 'New comment from test'},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		comment = Comment.objects.get(issue=self.issue, text='New comment from test')
+		self.assertEqual(comment.author, self.creator)
+
+	def test_edit_comment(self):
+		comment = Comment.objects.create(
+			issue=self.issue,
+			author=self.creator,
+			text='Original text',
+		)
+
+		response = self.client.post(
+			reverse('comment_edit', args=[comment.id]),
+			{'text': 'Updated text'},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		comment.refresh_from_db()
+		self.assertEqual(comment.text, 'Updated text')
+
+	def test_delete_comment(self):
+		comment = Comment.objects.create(
+			issue=self.issue,
+			author=self.creator,
+			text='Comment to delete',
+		)
+
+		response = self.client.post(
+			reverse('comment_delete', args=[comment.id]),
+		)
+
+		self.assertEqual(response.status_code, 302)
+		self.assertFalse(Comment.objects.filter(id=comment.id).exists())
