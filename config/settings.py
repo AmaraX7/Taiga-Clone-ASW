@@ -1,8 +1,10 @@
 from pathlib import Path
+import sys
 from django.core.exceptions import ImproperlyConfigured
 from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+IS_TEST = 'test' in sys.argv
 
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=True, cast=bool)
@@ -134,6 +136,9 @@ AWS_S3_FILE_OVERWRITE = False
 if not STORAGE_BACKEND:
     STORAGE_BACKEND = 's3' if AWS_STORAGE_BUCKET_NAME else 'local'
 
+if IS_TEST:
+    STORAGE_BACKEND = 'local'
+
 if STORAGE_BACKEND == 's3':
     if not AWS_STORAGE_BUCKET_NAME:
         raise ImproperlyConfigured(
@@ -144,7 +149,7 @@ if STORAGE_BACKEND == 's3':
         'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
     }
 elif STORAGE_BACKEND == 'local':
-    if not DEBUG:
+    if not DEBUG and not IS_TEST:
         raise ImproperlyConfigured(
             'Production requires external storage. Set STORAGE_BACKEND=s3 and configure AWS variables.'
         )
@@ -156,6 +161,11 @@ else:
     raise ImproperlyConfigured(
         'Invalid STORAGE_BACKEND. Supported values are: local, s3.'
     )
+
+if IS_TEST:
+    STORAGES['staticfiles'] = {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    }
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
