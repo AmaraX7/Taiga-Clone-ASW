@@ -21,8 +21,15 @@ while [ "$attempt" -le "$MAX_RETRIES" ]; do
   sleep "$RETRY_DELAY"
 done
 
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
   python manage.py createsuperuser --noinput || true
 fi
 
-exec python manage.py runserver 0.0.0.0:${PORT:-8000}
+if [ "$DEBUG" = "True" ] || [ "$DEBUG" = "true" ] || [ "$DEBUG" = "1" ]; then
+  exec python manage.py runserver 0.0.0.0:${PORT:-8000}
+fi
+
+exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2 --threads 2 --timeout 120

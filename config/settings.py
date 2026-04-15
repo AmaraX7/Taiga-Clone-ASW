@@ -6,12 +6,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = ['*']
+
+default_allowed_hosts = ['localhost', '127.0.0.1']
+render_external_hostname = config('RENDER_EXTERNAL_HOSTNAME', default='').strip()
+if render_external_hostname:
+    default_allowed_hosts.append(render_external_hostname)
+
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=','.join(default_allowed_hosts), cast=Csv())
+
+default_csrf_origins = ['http://localhost:8000', 'http://127.0.0.1:8000', 'https://*.onrender.com']
+if render_external_hostname:
+    default_csrf_origins.append(f'https://{render_external_hostname}')
+
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://*.onrender.com,http://localhost:8000,http://127.0.0.1:8000',
+    default=','.join(default_csrf_origins),
     cast=Csv(),
 )
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -35,6 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -127,7 +141,7 @@ if STORAGE_BACKEND == 's3':
         )
     STORAGES = {
         'default': {'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage'},
-        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
     }
 elif STORAGE_BACKEND == 'local':
     if not DEBUG:
@@ -136,7 +150,7 @@ elif STORAGE_BACKEND == 'local':
         )
     STORAGES = {
         'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
     }
 else:
     raise ImproperlyConfigured(
@@ -145,6 +159,7 @@ else:
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
