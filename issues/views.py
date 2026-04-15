@@ -108,8 +108,8 @@ def issue_new(request):
 
 
 @login_required
-def issue_delete(request, pk):
-    issue = get_object_or_404(Issue, pk=pk)
+def issue_delete(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
     if request.method == 'POST':
         issue.delete()
         return redirect('issue_list')
@@ -222,4 +222,21 @@ def comment_delete(request, comment_id):
     issue_id = comment.issue.pk
     if request.method == 'POST':
         comment.delete()
+    return redirect('issue_detail', issue_id=issue_id)
+
+
+@login_required
+def issue_set_deadline(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+    if request.method == 'POST':
+        deadline_str = request.POST.get('deadline', '').strip()
+        if deadline_str:
+            import datetime
+            try:
+                issue.deadline = datetime.date.fromisoformat(deadline_str)
+            except ValueError:
+                pass
+        else:
+            issue.deadline = None
+        issue.save(update_fields=['deadline'])
     return redirect('issue_detail', issue_id=issue_id)
