@@ -9,6 +9,9 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+        sync: false
       - key: STORAGE_BACKEND
         value: "s3"
       - key: DB_NAME
