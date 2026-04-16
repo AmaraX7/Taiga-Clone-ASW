@@ -1,7 +1,7 @@
 # Projecte ASW — Taiga Clone
 
 ## Membres de l'equip
-- Mohamed Amara El Houiti
+- Mohamed Amara
 - Victor Carilla
 - Aina Oskam
 - Adam Ziani
