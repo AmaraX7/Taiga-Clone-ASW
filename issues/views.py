@@ -369,21 +369,16 @@ def comment_delete(request, comment_id):
 @login_required
 def settings_view(request):
     """Main settings page — lists all configurable issue catalogs."""
-    if not IssueStatus.objects.exists():
-        for item in IssueStatus.get_default_statuses():
-            IssueStatus.objects.create(**item)
-    if not IssueType.objects.exists():
-        for item in IssueType.get_defaults():
-            IssueType.objects.create(**item)
-    if not IssueSeverity.objects.exists():
-        for item in IssueSeverity.get_defaults():
-            IssueSeverity.objects.create(**item)
-    if not IssuePriority.objects.exists():
-        for item in IssuePriority.get_defaults():
-            IssuePriority.objects.create(**item)
-    if not DueDatePreset.objects.exists():
-        for item in DueDatePreset.get_defaults():
-            DueDatePreset.objects.create(**item)
+    for item in IssueStatus.get_default_statuses():
+        IssueStatus.objects.get_or_create(slug=item['slug'], defaults=item)
+    for item in IssueType.get_defaults():
+        IssueType.objects.get_or_create(slug=item['slug'], defaults=item)
+    for item in IssueSeverity.get_defaults():
+        IssueSeverity.objects.get_or_create(slug=item['slug'], defaults=item)
+    for item in IssuePriority.get_defaults():
+        IssuePriority.objects.get_or_create(slug=item['slug'], defaults=item)
+    for item in DueDatePreset.get_defaults():
+        DueDatePreset.objects.get_or_create(name=item['name'], defaults=item)
 
     context = {
         'statuses': IssueStatus.objects.all(),
