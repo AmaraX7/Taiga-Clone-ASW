@@ -105,9 +105,6 @@
                     <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.priority_label }}</span></td>
                     <td>
                         <a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a>
-                        {% if request.user == issue.created_by %}
-                        <a href="{% url 'issue_edit' issue.id %}" class="btn btn-secondary btn-sm" style="margin-left:8px;">Edit</a>
-                        {% endif %}
                         {% if issue.deadline %}
                         <svg class="list-deadline-icon status-{{ issue.deadline_status }}" xmlns="http://www.w3.org/2000/svg"
                             width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
