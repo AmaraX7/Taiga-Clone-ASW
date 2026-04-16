@@ -26,7 +26,12 @@
         {% endif %}
         {{ issue.subject }}
     </h1>
-    <a href="{% url 'issue_list' %}" class="btn btn-cancel">Back to list</a>
+    <div style="display:flex; gap:8px; align-items:center;">
+        {% if request.user == issue.created_by %}
+        <a href="{% url 'issue_edit' issue.pk %}" class="btn btn-secondary">Edit issue</a>
+        {% endif %}
+        <a href="{% url 'issue_list' %}" class="btn btn-cancel">Back to list</a>
+    </div>
 </div>
 
 <div class="issue-detail-layout">
