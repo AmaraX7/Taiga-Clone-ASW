@@ -142,7 +142,6 @@ class Issue(models.Model):
     severity    = models.CharField(max_length=20, default='normal')
     priority    = models.CharField(max_length=10, default='normal')
     tags        = models.ManyToManyField(IssueTag, blank=True, related_name='issues')
-    # Añadimos el campo deadline que faltaba en tu modelo
     deadline    = models.DateField(null=True, blank=True)
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_issues')
     created_by  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_issues')
