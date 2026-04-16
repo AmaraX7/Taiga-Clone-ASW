@@ -1,9 +1,13 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Q, Max
 from .models import Attachment, Comment, Issue, Watcher
-from .forms import AddWatcherForm, AssignIssueForm, AttachmentForm, IssueForm
+from .forms import AddWatcherForm, AssignIssueForm, AttachmentForm, IssueForm, IssueStatusForm
+#settings
+from django.contrib import messages
+from django.utils.text import slugify
+from .models import IssueStatus
 
 
 SORTABLE_FIELDS = {
@@ -67,7 +71,10 @@ def issue_list(request):
         'type': Issue.TYPE_CHOICES,
         'severity': Issue.SEVERITY_CHOICES,
         'priority': Issue.PRIORITY_CHOICES,
-        'status': Issue.STATUS_CHOICES,
+        'status': [
+            (str(s.id), s.name)
+            for s in IssueStatus.objects.all().order_by('order')
+        ],
         'assigned_to': [
             (str(u.id), u.username)
             for u in User.objects.filter(
@@ -90,7 +97,7 @@ def issue_list(request):
         'filter_options': filter_options,
         'filter_labels': FILTER_LABELS,
         'active_filters': active_filters,
-        'status_choices': Issue.STATUS_CHOICES,
+        'status_choices': [(s.slug, s.name) for s in IssueStatus.objects.all()],
     })
 
 
@@ -129,6 +136,7 @@ def issue_detail(request, issue_id):
     assign_form = AssignIssueForm(instance=issue)
     watcher_form = AddWatcherForm()
     attachment_form = AttachmentForm()
+    status_form = IssueStatusForm(instance=issue)
     return render(
         request,
         'issues/detail.html',
@@ -137,6 +145,7 @@ def issue_detail(request, issue_id):
             'assign_form': assign_form,
             'watcher_form': watcher_form,
             'attachment_form': attachment_form,
+            'status_form': status_form,
             'is_watching': is_watching,
             'watcher_list': watcher_list,
         },
@@ -165,11 +174,12 @@ def watcher_remove(request, issue_id, user_id):
 def issue_update_status(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     if request.method == 'POST':
-        new_status = request.POST.get('status')
-        valid_statuses = [s[0] for s in Issue.STATUS_CHOICES]
-        if new_status in valid_statuses:
-            issue.status = new_status
+        slug = request.POST.get('status')
+        try:
+            issue.status = IssueStatus.objects.get(slug=slug)
             issue.save()
+        except IssueStatus.DoesNotExist:
+            pass
     next_url = request.POST.get('next', '/')
     return redirect(next_url)
 
@@ -243,6 +253,97 @@ def comment_delete(request, comment_id):
     return redirect('issue_detail', issue_id=issue_id)
 
 
+#settings
+ 
+ 
+@login_required
+def settings_view(request):
+    """Main settings page — lists all custom statuses."""
+    # Carrega els per defecte del model si no hi ha
+    if not IssueStatus.objects.exists():
+        for s in IssueStatus.get_default_statuses():
+            IssueStatus.objects.create(**s)
+ 
+    statuses = IssueStatus.objects.all()
+    return render(request, 'issues/settings.html', {'statuses': statuses})
+ 
+ 
+@login_required
+def status_create(request):
+    if request.method == 'POST':
+        name      = request.POST.get('name', '').strip()
+        color     = request.POST.get('color', '#70728f').strip()
+        is_closed = request.POST.get('is_closed') == 'on'
+        if name:
+            slug = slugify(name)
+            # Slug ha de ser únic, anem sumant números al darrere fins que ho sigui
+            base_slug, n = slug, 1
+            while IssueStatus.objects.filter(slug=slug).exists():
+                slug = f'{base_slug}-{n}'
+                n += 1
+                
+            last_order = IssueStatus.objects.aggregate(Max('order'))['order__max']
+            next_order = (last_order + 1) if last_order is not None else 0
+            
+            IssueStatus.objects.create(name=name, slug=slug, color=color, is_closed=is_closed, order=next_order)
+            messages.success(request, f'Status "{name}" created.')
+        else:
+            messages.error(request, 'Name is required.')
+    return redirect('settings_view')
+ 
+ 
+@login_required
+def status_edit(request, pk):
+    status = get_object_or_404(IssueStatus, pk=pk)
+    if request.method == 'POST':
+        name      = request.POST.get('name', '').strip()
+        color     = request.POST.get('color', '#70728f').strip()
+        is_closed = request.POST.get('is_closed') == 'on'
+        if name:
+            status.name      = name
+            status.color     = color
+            status.is_closed = is_closed
+            status.save()
+            messages.success(request, f'Status "{name}" updated.')
+        else:
+            messages.error(request, 'Name is required.')
+        return redirect('settings_view')
+    return render(request, 'issues/status_edit.html', {'status': status})
+ 
+ 
+@login_required
+def status_delete(request, pk):
+    status = get_object_or_404(IssueStatus, pk=pk)
+    if request.method == 'POST':
+        name = status.name
+        status.delete()
+        messages.success(request, f'Status "{name}" deleted.')
+    return redirect('settings_view')
+ 
+ 
+@login_required
+def status_reorder(request):
+    """Accepts a POST with ordered list of IDs and updates their `order` field."""
+    if request.method == 'POST':
+        ids = request.POST.getlist('order[]')
+        for i, pk in enumerate(ids):
+            IssueStatus.objects.filter(pk=pk).update(order=i)
+    return redirect('settings_view')
+
+
+@login_required
+def issue_update_status(request, issue_id):
+    issue = get_object_or_404(Issue, id=issue_id)
+
+    if request.method == "POST":
+        form = IssueStatusForm(request.POST, instance=issue)
+        if form.is_valid():
+            form.save()
+
+    return redirect("issue_detail", issue_id=issue.id)
+
+#deadline
+  
 @login_required
 def issue_set_deadline(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)

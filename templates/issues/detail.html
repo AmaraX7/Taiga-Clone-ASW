@@ -46,6 +46,17 @@
         <div class="issue-detail-description">
             <p>{{ issue.description|default:"No description." }}</p>
         </div>
+      
+      
+        <!-- Status -->
+        <div class="issue-detail-section">
+            <h2>Status</h2>
+            <form method="post" action="{% url 'issue_update_status' issue.id %}">
+                {% csrf_token %}
+                {{ status_form.status }}
+                <button type="submit" class="btn btn-new">Update</button>
+            </form>
+        </div>
 
         <!-- Attachments -->
         <div class="issue-detail-section">
@@ -117,7 +128,7 @@
 
         <!-- Status badge -->
         <div class="sidebar-status-bar">
-            <span class="badge badge-status-{{ issue.status }} badge-status-large">{{ issue.get_status_display }}</span>
+            <span class="badge badge-status-{{ issue.status.slug }} badge-status-large">{{ issue.status.name }}</span>
         </div>
 
         <!-- Metadata fields -->

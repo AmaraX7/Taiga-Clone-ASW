@@ -3,8 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 
-from issues.models import Issue
-STATUS_CHOICES = Issue.STATUS_CHOICES
+from issues.models import Issue, IssueStatus
 from .forms import ProfileEditForm
 
 CLOSED_STATUSES = ['closed', 'rejected', 'postponed']
@@ -77,7 +76,7 @@ def profile_view(request, username):
         'open_count':      open_count,
         'watched_count':   watched_count,
         'comment_count':   comment_count,
-        'status_choices':  STATUS_CHOICES,
+        'status_choices':  [(s.slug, s.name) for s in IssueStatus.objects.all()],
     })
 
 

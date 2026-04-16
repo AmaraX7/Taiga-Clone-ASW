@@ -3,7 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Attachment, Comment, Issue
+from .models import Attachment, Comment, Issue, IssueStatus
 
 
 class IssueFeatureTests(TestCase):
@@ -11,11 +11,19 @@ class IssueFeatureTests(TestCase):
 		self.creator = User.objects.create_user(username='creator')
 		self.assignee = User.objects.create_user(username='assignee')
 		self.client.force_login(self.creator)
+		self.status = IssueStatus.objects.create(
+			name='New',
+			slug='new',
+			color='#83eede',
+			is_closed=False,
+			order=0,
+		)
 		self.issue = Issue.objects.create(
 			subject='Sample issue',
 			description='Sample description',
 			created_by=self.creator,
 			assigned_to=self.creator,
+			status=self.status,
 		)
 
 	def test_assign_issue(self):
@@ -68,6 +76,7 @@ class IssueFeatureTests(TestCase):
 				'subject': 'Created from test',
 				'description': 'Issue body',
 				'assigned_to': self.assignee.id,
+				'status': self.status.id,
 			},
 		)
 

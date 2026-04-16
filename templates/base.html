@@ -25,6 +25,7 @@
                 </summary>
                 <div class="navbar-dropdown-menu">
                     <a href="{% url 'profile_view' user.username %}" class="navbar-dropdown-item">View Profile</a>
+                    <a href="{% url 'settings_view' %}" class="navbar-dropdown-item">Settings</a>
                     <form method="post" action="{% url 'account_logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="navbar-dropdown-item navbar-dropdown-btn">Sign out</button>
