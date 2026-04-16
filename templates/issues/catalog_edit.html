@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Edit setting{% endblock %}
+
+{% block content %}
+<div class="form-header" style="text-align:center;">
+    <h1>Edit {{ catalog }}</h1>
+</div>
+
+<div class="form-container">
+    <form method="post" class="issue-form" style="max-width:520px;">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Name</label>
+            <input type="text" name="name" value="{{ item.name }}" required>
+        </div>
+
+        {% if item.color %}
+        <div class="form-group">
+            <label>Color</label>
+            <input type="text" name="color" value="{{ item.color }}" pattern="^#[0-9a-fA-F]{6}$" maxlength="7" required>
+        </div>
+        {% endif %}
+
+        {% if item.days_from_today %}
+        <div class="form-group">
+            <label>Days from today</label>
+            <input type="number" min="1" name="days_from_today" value="{{ item.days_from_today }}" required>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-new">Save</button>
+            <a href="{% url 'settings_view' %}" class="btn btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

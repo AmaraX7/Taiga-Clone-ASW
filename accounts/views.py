@@ -3,16 +3,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 
-from issues.models import Issue
+from issues.models import Issue, IssueStatus
 from .forms import ProfileEditForm
 
 CLOSED_STATUSES = ['closed', 'rejected', 'postponed']
 SORT_FIELDS = {
-    'id':         'id',
-    'issue_type': 'issue_type',
-    'severity':   'severity',
-    'status':     'status',
-    'modified':   'modified_at',
+    'id':          'id',
+    'issue_type':  'issue_type',
+    'severity':    'severity',
+    'priority':    'priority',
+    'status':      'status',
+    'subject':     'subject',
+    'assigned_to': 'assigned_to__username',
+    'modified':    'modified_at',
 }
 
 
@@ -34,7 +37,7 @@ def profile_view(request, username):
     a_sort  = request.GET.get('assigned_sort', 'id')
     a_order = request.GET.get('assigned_order', 'asc')
     assigned_issues = _sorted_issues(
-        Issue.objects.filter(assigned_to=profile_user).exclude(status__in=CLOSED_STATUSES),
+        Issue.objects.filter(assigned_to=profile_user).exclude(status__slug__in=CLOSED_STATUSES),
         a_sort, a_order,
     )
 
@@ -54,7 +57,7 @@ def profile_view(request, username):
     # Counts for sidebar stats
     open_count    = Issue.objects.filter(
         assigned_to=profile_user
-    ).exclude(status__in=CLOSED_STATUSES).count()
+    ).exclude(status__slug__in=CLOSED_STATUSES).count()
     watched_count = profile_user.watched_issues.count() if is_own else 0
     comment_count = profile_user.issue_comments.count()
 
@@ -73,6 +76,7 @@ def profile_view(request, username):
         'open_count':      open_count,
         'watched_count':   watched_count,
         'comment_count':   comment_count,
+        'status_choices':  [(s.slug, s.name) for s in IssueStatus.objects.all()],
     })
 
 

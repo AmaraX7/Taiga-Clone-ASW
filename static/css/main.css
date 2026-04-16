@@ -425,6 +425,76 @@ body {
 .badge-severity-important { background: #f5a623; color: #2e3440; }
 .badge-severity-critical { background: #e44057; color: #fff; }
 
+/* Watcher remove button */
+.sidebar-watcher-remove-form {
+    display: inline;
+    margin-left: auto;
+}
+
+.btn-watcher-remove {
+    background: none;
+    border: none;
+    color: #9b9fb0;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.btn-watcher-remove:hover {
+    color: #e44057;
+}
+
+/* Helper text for form fields */
+.field-help {
+    display: block;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* Inline status form in issue list */
+.status-inline-form {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-select {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #374151;
+    outline: none;
+}
+
+.status-select:focus {
+    border-color: #9b9fb0;
+}
+
+.status-save-btn {
+    background: none;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    color: #6b7280;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+}
+
+.status-save-btn:hover {
+    background: #eceff4;
+    color: #2e3440;
+}
+
 /* Form */
 .form-header {
     margin-bottom: 24px;
