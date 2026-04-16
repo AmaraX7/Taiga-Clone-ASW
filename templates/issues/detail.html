@@ -102,9 +102,8 @@
                 {% for comment in issue.comments.all %}
                 <li class="comment-item" id="comment-{{ comment.id }}">
                     <p>{{ comment.text }}</p>
-                    <span class="comment-meta">by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i"
-                        }}</span>
-                    {% if comment.modified_at != comment.created_at %}
+                    <span class="comment-meta">by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i" }}</span>
+                    {% if comment.modified_at|date:"YmdHi" != comment.created_at|date:"YmdHi" %}
                     <span class="comment-meta">(edited {{ comment.modified_at|date:"d/m/Y H:i" }})</span>
                     {% endif %}
                     {% if request.user == comment.author %}
