@@ -37,7 +37,7 @@ def profile_view(request, username):
     a_sort  = request.GET.get('assigned_sort', 'id')
     a_order = request.GET.get('assigned_order', 'asc')
     assigned_issues = _sorted_issues(
-        Issue.objects.filter(assigned_to=profile_user).exclude(status__in=CLOSED_STATUSES),
+        Issue.objects.filter(assigned_to=profile_user).exclude(status__slug__in=CLOSED_STATUSES),
         a_sort, a_order,
     )
 
@@ -57,7 +57,7 @@ def profile_view(request, username):
     # Counts for sidebar stats
     open_count    = Issue.objects.filter(
         assigned_to=profile_user
-    ).exclude(status__in=CLOSED_STATUSES).count()
+    ).exclude(status__slug__in=CLOSED_STATUSES).count()
     watched_count = profile_user.watched_issues.count() if is_own else 0
     comment_count = profile_user.issue_comments.count()
 
