@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q, Max
+from django.core.exceptions import PermissionDenied
 from .models import Attachment, Comment, Issue, Watcher
 from .forms import AddWatcherForm, AssignIssueForm, AttachmentForm, IssueForm, IssueStatusForm
 #settings
@@ -118,6 +119,8 @@ def issue_new(request):
 @login_required
 def issue_delete(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)
+    if issue.created_by_id != request.user.id:
+        raise PermissionDenied
     if request.method == 'POST':
         issue.delete()
         return redirect('issue_list')
@@ -212,6 +215,8 @@ def attachment_add(request, issue_id):
 def attachment_delete(request, issue_id, attachment_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     attachment = get_object_or_404(Attachment, pk=attachment_id, issue=issue)
+    if attachment.uploaded_by_id != request.user.id:
+        raise PermissionDenied
     if request.method == 'POST':
         attachment.file.delete(save=False)
         attachment.delete()
@@ -235,6 +240,8 @@ def comment_add(request, issue_id):
 @login_required
 def comment_edit(request, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
+    if comment.author_id != request.user.id:
+        raise PermissionDenied
     if request.method == 'POST':
         text = request.POST.get('text', '').strip()
         if text:
@@ -247,6 +254,8 @@ def comment_edit(request, comment_id):
 @login_required
 def comment_delete(request, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
+    if comment.author_id != request.user.id:
+        raise PermissionDenied
     issue_id = comment.issue.pk
     if request.method == 'POST':
         comment.delete()
