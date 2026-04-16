@@ -115,7 +115,7 @@
                         </svg>
                         {% endif %}
                     </td>
-                    <td><span class="badge badge-status-{{ issue.status }}">{{ issue.get_status_display }}</span></td>
+                    <td><span class="badge badge-status-{{ issue.status }}">{{ issue.status.name }}</span></td>
                     <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
                     <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
                     <td>{{ issue.assigned_to|default:"-" }}</td>

@@ -18,7 +18,7 @@ class IssueForm(forms.ModelForm):
 
     class Meta:
         model = Issue
-        fields = ['subject', 'description', 'deadline', 'assigned_to']
+        fields = ['subject', 'description', 'status', 'deadline', 'assigned_to']
 
 
 class AssignIssueForm(forms.ModelForm):
@@ -35,3 +35,9 @@ class AssignIssueForm(forms.ModelForm):
 
 class AttachmentForm(forms.Form):
     file = forms.FileField()
+
+
+class IssueStatusForm(forms.ModelForm):
+    class Meta:
+        model = Issue
+        fields = ['status']
