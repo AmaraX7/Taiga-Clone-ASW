@@ -71,8 +71,7 @@
                 {% for attachment in issue.attachments.all %}
                 <li class="item-row">
                     <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">{{ attachment.file.name }}</a>
-                    <span class="comment-meta">by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y
-                        H:i" }}</span>
+                    <span class="comment-meta">by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
                     {% if request.user == attachment.uploaded_by %}
                     <form method="post" action="{% url 'attachment_delete' issue.id attachment.id %}">
                         {% csrf_token %}
