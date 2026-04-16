@@ -100,9 +100,9 @@
             <tbody>
                 {% for issue in issues %}
                 <tr>
-                    <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.get_issue_type_display }}</span></td>
-                    <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
-                    <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
+                    <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.issue_type_label }}</span></td>
+                    <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.severity_label }}</span></td>
+                    <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.priority_label }}</span></td>
                     <td>
                         <a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a>
                         {% if issue.deadline %}

@@ -116,6 +116,136 @@
                 </form>
             </div>
 
+            <div class="settings-add-section">
+                <h3>Issue Types</h3>
+                <ul class="item-list" style="margin-bottom:12px;">
+                    {% for item in types %}
+                    <li class="item-row">
+                        <span>{{ item.name }} ({{ item.slug }})</span>
+                        <div>
+                            <a href="{% url 'catalog_edit' 'types' item.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                            <form method="post" action="{% url 'catalog_delete' 'types' item.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <form method="post" action="{% url 'catalog_create' 'types' %}" class="settings-add-form">
+                    {% csrf_token %}
+                    <div class="settings-add-fields">
+                        <input type="text" name="name" placeholder="Type name" required>
+                        <input type="text" name="color" value="#4c9aff" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <button type="submit" class="btn btn-new">Add type</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="settings-add-section">
+                <h3>Severities</h3>
+                <ul class="item-list" style="margin-bottom:12px;">
+                    {% for item in severities %}
+                    <li class="item-row">
+                        <span>{{ item.name }} ({{ item.slug }})</span>
+                        <div>
+                            <a href="{% url 'catalog_edit' 'severities' item.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                            <form method="post" action="{% url 'catalog_delete' 'severities' item.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <form method="post" action="{% url 'catalog_create' 'severities' %}" class="settings-add-form">
+                    {% csrf_token %}
+                    <div class="settings-add-fields">
+                        <input type="text" name="name" placeholder="Severity name" required>
+                        <input type="text" name="color" value="#6b7280" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <button type="submit" class="btn btn-new">Add severity</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="settings-add-section">
+                <h3>Priorities</h3>
+                <ul class="item-list" style="margin-bottom:12px;">
+                    {% for item in priorities %}
+                    <li class="item-row">
+                        <span>{{ item.name }} ({{ item.slug }})</span>
+                        <div>
+                            <a href="{% url 'catalog_edit' 'priorities' item.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                            <form method="post" action="{% url 'catalog_delete' 'priorities' item.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <form method="post" action="{% url 'catalog_create' 'priorities' %}" class="settings-add-form">
+                    {% csrf_token %}
+                    <div class="settings-add-fields">
+                        <input type="text" name="name" placeholder="Priority name" required>
+                        <input type="text" name="color" value="#22c55e" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <button type="submit" class="btn btn-new">Add priority</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="settings-add-section">
+                <h3>Tags</h3>
+                <ul class="item-list" style="margin-bottom:12px;">
+                    {% for item in tags %}
+                    <li class="item-row">
+                        <span>{{ item.name }} ({{ item.slug }})</span>
+                        <div>
+                            <a href="{% url 'catalog_edit' 'tags' item.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                            <form method="post" action="{% url 'catalog_delete' 'tags' item.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <form method="post" action="{% url 'catalog_create' 'tags' %}" class="settings-add-form">
+                    {% csrf_token %}
+                    <div class="settings-add-fields">
+                        <input type="text" name="name" placeholder="Tag name" required>
+                        <input type="text" name="color" value="#70728f" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <button type="submit" class="btn btn-new">Add tag</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="settings-add-section">
+                <h3>Due Date Presets</h3>
+                <ul class="item-list" style="margin-bottom:12px;">
+                    {% for item in due_date_presets %}
+                    <li class="item-row">
+                        <span>{{ item.name }} ({{ item.days_from_today }} days)</span>
+                        <div>
+                            <a href="{% url 'catalog_edit' 'due-dates' item.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                            <form method="post" action="{% url 'catalog_delete' 'due-dates' item.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <form method="post" action="{% url 'catalog_create' 'due-dates' %}" class="settings-add-form">
+                    {% csrf_token %}
+                    <div class="settings-add-fields">
+                        <input type="text" name="name" placeholder="Preset name" required>
+                        <input type="number" name="days_from_today" min="1" placeholder="Days" required>
+                        <button type="submit" class="btn btn-new">Add preset</button>
+                    </div>
+                </form>
+            </div>
+
         </div>
     </div>
 

@@ -1,11 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}New issue{% endblock %}
+{% block title %}{% if is_edit %}Edit issue{% else %}New issue{% endif %}{% endblock %}
 
 {% block content %}
 <div class="form-header" style="text-align: center;">
-    <h1>New issue</h1>
+    <h1>{% if is_edit %}Edit issue{% else %}New issue{% endif %}</h1>
 </div>
+
+{% if not is_edit %}
+<div style="text-align:center; margin-bottom: 16px;">
+    <a href="{% url 'issue_bulk_insert' %}" class="btn btn-secondary">Bulk insert</a>
+</div>
+{% endif %}
 
 <div class="form-container">
     <form method="post" class="issue-form">
@@ -81,6 +87,31 @@
         </div>
 
         <div class="form-group">
+            <label for="{{ form.issue_type.id_for_label }}">{{ form.issue_type.label }}</label>
+            {{ form.issue_type }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.severity.id_for_label }}">{{ form.severity.label }}</label>
+            {{ form.severity }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
+            {{ form.priority }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.tags.id_for_label }}">{{ form.tags.label }}</label>
+            {{ form.tags }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.due_date_preset.id_for_label }}">{{ form.due_date_preset.label }}</label>
+            {{ form.due_date_preset }}
+        </div>
+
+        <div class="form-group">
             <label for="{{ form.assigned_to.id_for_label }}">{{ form.assigned_to.label }}</label>
             {{ form.assigned_to }}
             {% if form.assigned_to.errors %}
@@ -93,7 +124,7 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-new">Create</button>
+            <button type="submit" class="btn btn-new">{% if is_edit %}Save{% else %}Create{% endif %}</button>
             <a href="{% url 'issue_list' %}" class="btn btn-cancel">Cancel</a>
         </div>
     </form>
