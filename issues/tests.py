@@ -11,12 +11,14 @@ class IssueFeatureTests(TestCase):
 		self.creator = User.objects.create_user(username='creator')
 		self.assignee = User.objects.create_user(username='assignee')
 		self.client.force_login(self.creator)
-		self.status = IssueStatus.objects.create(
-			name='New',
+		self.status, _ = IssueStatus.objects.get_or_create(
 			slug='new',
-			color='#83eede',
-			is_closed=False,
-			order=0,
+			defaults={
+				'name': 'New',
+				'color': '#83eede',
+				'is_closed': False,
+				'order': 0,
+			},
 		)
 		self.issue = Issue.objects.create(
 			subject='Sample issue',

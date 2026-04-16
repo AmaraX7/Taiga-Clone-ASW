@@ -4,6 +4,35 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+def migrate_status_to_fk(apps, schema_editor):
+    Issue = apps.get_model('issues', 'Issue')
+    IssueStatus = apps.get_model('issues', 'IssueStatus')
+
+    default_statuses = [
+        {'name': 'New', 'slug': 'new', 'color': '#83eede', 'is_closed': False, 'order': 0},
+        {'name': 'In progress', 'slug': 'in_progress', 'color': '#e2b93b', 'is_closed': False, 'order': 1},
+        {'name': 'Ready for test', 'slug': 'ready_for_test', 'color': '#4c9aff', 'is_closed': False, 'order': 2},
+        {'name': 'Needs info', 'slug': 'needs_info', 'color': '#f5a623', 'is_closed': False, 'order': 3},
+        {'name': 'Closed', 'slug': 'closed', 'color': '#a0a4b8', 'is_closed': True, 'order': 4},
+        {'name': 'Rejected', 'slug': 'rejected', 'color': '#e44057', 'is_closed': True, 'order': 5},
+        {'name': 'Postponed', 'slug': 'postponed', 'color': '#70728f', 'is_closed': True, 'order': 6},
+    ]
+
+    for status_data in default_statuses:
+        IssueStatus.objects.get_or_create(
+            slug=status_data['slug'],
+            defaults=status_data,
+        )
+
+    slug_to_id = dict(IssueStatus.objects.values_list('slug', 'id'))
+    default_status_id = slug_to_id['new']
+
+    for issue in Issue.objects.all().only('id', 'status'):
+        status_slug = (issue.status or 'new').strip().lower()
+        issue.status_fk_id = slug_to_id.get(status_slug, default_status_id)
+        issue.save(update_fields=['status_fk'])
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,6 +40,26 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='issue',
+            name='status_fk',
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='issues.issuestatus',
+            ),
+        ),
+        migrations.RunPython(migrate_status_to_fk, migrations.RunPython.noop),
+        migrations.RemoveField(
+            model_name='issue',
+            name='status',
+        ),
+        migrations.RenameField(
+            model_name='issue',
+            old_name='status_fk',
+            new_name='status',
+        ),
         migrations.AlterField(
             model_name='issue',
             name='status',
