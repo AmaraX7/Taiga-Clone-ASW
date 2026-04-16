@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import Attachment, Comment, Issue, Watcher
-from .forms import AssignIssueForm, AttachmentForm, IssueForm
+from .forms import AddWatcherForm, AssignIssueForm, AttachmentForm, IssueForm
 
 
 SORTABLE_FIELDS = {
@@ -14,7 +14,7 @@ SORTABLE_FIELDS = {
     'priority': 'priority',
     'severity': 'severity',
     'assigned_to': 'assigned_to__username',
-    'created_at': 'created_at',
+    'modified_at': 'modified_at',
 }
 
 FILTER_FIELDS = {
@@ -39,7 +39,7 @@ FILTER_LABELS = {
 @login_required
 def issue_list(request):
     q = request.GET.get('q', '').strip()
-    sort = request.GET.get('sort', 'created_at')
+    sort = request.GET.get('sort', 'modified_at')
     order = request.GET.get('order', 'desc')
 
     issues = Issue.objects.all()
@@ -90,6 +90,7 @@ def issue_list(request):
         'filter_options': filter_options,
         'filter_labels': FILTER_LABELS,
         'active_filters': active_filters,
+        'status_choices': Issue.STATUS_CHOICES,
     })
 
 
@@ -101,7 +102,7 @@ def issue_new(request):
             issue = form.save(commit=False)
             issue.created_by = request.user
             issue.save()
-            return redirect('issue_list')
+            return redirect('issue_detail', issue_id=issue.id)
     else:
         form = IssueForm()
     return render(request, 'issues/new.html', {'form': form})
@@ -126,6 +127,7 @@ def issue_detail(request, issue_id):
     is_watching  = issue.watchers.filter(user=request.user).exists()
     watcher_list = issue.watchers.select_related('user').all()
     assign_form = AssignIssueForm(instance=issue)
+    watcher_form = AddWatcherForm()
     attachment_form = AttachmentForm()
     return render(
         request,
@@ -133,6 +135,7 @@ def issue_detail(request, issue_id):
         {
             'issue': issue,
             'assign_form': assign_form,
+            'watcher_form': watcher_form,
             'attachment_form': attachment_form,
             'is_watching': is_watching,
             'watcher_list': watcher_list,
@@ -144,16 +147,31 @@ def issue_detail(request, issue_id):
 def watcher_add(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     if request.method == 'POST':
-        Watcher.objects.get_or_create(issue=issue, user=request.user)
+        form = AddWatcherForm(request.POST)
+        if form.is_valid():
+            Watcher.objects.get_or_create(issue=issue, user=form.cleaned_data['user'])
     return redirect('issue_detail', issue_id=issue_id)
 
 
 @login_required
-def watcher_remove(request, issue_id):
+def watcher_remove(request, issue_id, user_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     if request.method == 'POST':
-        Watcher.objects.filter(issue=issue, user=request.user).delete()
+        Watcher.objects.filter(issue=issue, user_id=user_id).delete()
     return redirect('issue_detail', issue_id=issue_id)
+
+
+@login_required
+def issue_update_status(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        valid_statuses = [s[0] for s in Issue.STATUS_CHOICES]
+        if new_status in valid_statuses:
+            issue.status = new_status
+            issue.save()
+    next_url = request.POST.get('next', '/')
+    return redirect(next_url)
 
 
 @login_required

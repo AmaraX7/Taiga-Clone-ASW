@@ -4,15 +4,19 @@ from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 
 from issues.models import Issue
+STATUS_CHOICES = Issue.STATUS_CHOICES
 from .forms import ProfileEditForm
 
 CLOSED_STATUSES = ['closed', 'rejected', 'postponed']
 SORT_FIELDS = {
-    'id':         'id',
-    'issue_type': 'issue_type',
-    'severity':   'severity',
-    'status':     'status',
-    'modified':   'modified_at',
+    'id':          'id',
+    'issue_type':  'issue_type',
+    'severity':    'severity',
+    'priority':    'priority',
+    'status':      'status',
+    'subject':     'subject',
+    'assigned_to': 'assigned_to__username',
+    'modified':    'modified_at',
 }
 
 
@@ -73,6 +77,7 @@ def profile_view(request, username):
         'open_count':      open_count,
         'watched_count':   watched_count,
         'comment_count':   comment_count,
+        'status_choices':  STATUS_CHOICES,
     })
 
 

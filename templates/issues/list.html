@@ -80,30 +80,29 @@
         <table class="issues-table">
             <thead>
                 <tr>
-                    {% sort_url 'id' current_sort current_order as url_id %}
-                    <th><a href="{{ url_id }}" class="sort-header {% if current_sort == 'id' %}active{% endif %}"># <span class="sort-arrows">{% if current_sort == 'id' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'issue_type' current_sort current_order as url_type %}
                     <th><a href="{{ url_type }}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">Type <span class="sort-arrows">{% if current_sort == 'issue_type' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
-                    {% sort_url 'subject' current_sort current_order as url_subject %}
-                    <th><a href="{{ url_subject }}" class="sort-header {% if current_sort == 'subject' %}active{% endif %}">Subject <span class="sort-arrows">{% if current_sort == 'subject' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
-                    {% sort_url 'status' current_sort current_order as url_status %}
-                    <th><a href="{{ url_status }}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">Status <span class="sort-arrows">{% if current_sort == 'status' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
-                    {% sort_url 'priority' current_sort current_order as url_priority %}
-                    <th><a href="{{ url_priority }}" class="sort-header {% if current_sort == 'priority' %}active{% endif %}">Priority <span class="sort-arrows">{% if current_sort == 'priority' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'severity' current_sort current_order as url_severity %}
                     <th><a href="{{ url_severity }}" class="sort-header {% if current_sort == 'severity' %}active{% endif %}">Severity <span class="sort-arrows">{% if current_sort == 'severity' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'priority' current_sort current_order as url_priority %}
+                    <th><a href="{{ url_priority }}" class="sort-header {% if current_sort == 'priority' %}active{% endif %}">Priority <span class="sort-arrows">{% if current_sort == 'priority' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'subject' current_sort current_order as url_subject %}
+                    <th><a href="{{ url_subject }}" class="sort-header {% if current_sort == 'subject' %}active{% endif %}">Issue <span class="sort-arrows">{% if current_sort == 'subject' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'status' current_sort current_order as url_status %}
+                    <th><a href="{{ url_status }}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">Status <span class="sort-arrows">{% if current_sort == 'status' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
+                    {% sort_url 'modified_at' current_sort current_order as url_modified %}
+                    <th><a href="{{ url_modified }}" class="sort-header {% if current_sort == 'modified_at' %}active{% endif %}">Modified <span class="sort-arrows">{% if current_sort == 'modified_at' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
                     {% sort_url 'assigned_to' current_sort current_order as url_assigned %}
                     <th><a href="{{ url_assigned }}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">Assigned to <span class="sort-arrows">{% if current_sort == 'assigned_to' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
-                    {% sort_url 'created_at' current_sort current_order as url_created %}
-                    <th><a href="{{ url_created }}" class="sort-header {% if current_sort == 'created_at' %}active{% endif %}">Created <span class="sort-arrows">{% if current_sort == 'created_at' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span></a></th>
 
                 </tr>
             </thead>
             <tbody>
                 {% for issue in issues %}
                 <tr>
-                    <td>{{ issue.id }}</td>
                     <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.get_issue_type_display }}</span></td>
+                    <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
+                    <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
                     <td>
                         <a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a>
                         {% if issue.deadline %}
@@ -115,11 +114,22 @@
                         </svg>
                         {% endif %}
                     </td>
-                    <td><span class="badge badge-status-{{ issue.status }}">{{ issue.get_status_display }}</span></td>
-                    <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
-                    <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
+                    <td>
+                        <form method="post" action="{% url 'issue_update_status' issue.id %}" class="status-inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <select name="status" class="status-select">
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if issue.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="status-save-btn" title="Save">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            </button>
+                        </form>
+                    </td>
+                    <td>{{ issue.modified_at|date:"d M Y" }}</td>
                     <td>{{ issue.assigned_to|default:"-" }}</td>
-                    <td>{{ issue.created_at|date:"d/m/Y" }}</td>
 
                 </tr>
                 {% endfor %}

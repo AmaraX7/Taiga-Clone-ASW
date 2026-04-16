@@ -8,25 +8,15 @@
     current_sort   - current sort field value
     current_order  - 'asc' or 'desc'
     username       - profile user's username (for URL construction)
+    status_choices - Issue.STATUS_CHOICES
 {% endcomment %}
 {% if issues %}
 <table class="issues-table">
     <thead>
         <tr>
             <th>
-                <a href="?tab={{ tab }}&{{ sort_param }}=id&{{ order_param }}={% if current_sort == 'id' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'id' %}active{% endif %}">
-                    # <span class="sort-arrows">{% if current_sort == 'id' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
-                </a>
-            </th>
-            <th>
                 <a href="?tab={{ tab }}&{{ sort_param }}=issue_type&{{ order_param }}={% if current_sort == 'issue_type' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'issue_type' %}active{% endif %}">
                     Type <span class="sort-arrows">{% if current_sort == 'issue_type' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
-                </a>
-            </th>
-            <th>Subject</th>
-            <th>
-                <a href="?tab={{ tab }}&{{ sort_param }}=status&{{ order_param }}={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">
-                    Status <span class="sort-arrows">{% if current_sort == 'status' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
                 </a>
             </th>
             <th>
@@ -35,8 +25,28 @@
                 </a>
             </th>
             <th>
+                <a href="?tab={{ tab }}&{{ sort_param }}=priority&{{ order_param }}={% if current_sort == 'priority' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'priority' %}active{% endif %}">
+                    Priority <span class="sort-arrows">{% if current_sort == 'priority' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
+            </th>
+            <th>
+                <a href="?tab={{ tab }}&{{ sort_param }}=subject&{{ order_param }}={% if current_sort == 'subject' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'subject' %}active{% endif %}">
+                    Issue <span class="sort-arrows">{% if current_sort == 'subject' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
+            </th>
+            <th>
+                <a href="?tab={{ tab }}&{{ sort_param }}=status&{{ order_param }}={% if current_sort == 'status' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'status' %}active{% endif %}">
+                    Status <span class="sort-arrows">{% if current_sort == 'status' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
+            </th>
+            <th>
                 <a href="?tab={{ tab }}&{{ sort_param }}=modified&{{ order_param }}={% if current_sort == 'modified' and current_order == 'desc' %}asc{% else %}desc{% endif %}" class="sort-header {% if current_sort == 'modified' %}active{% endif %}">
                     Modified <span class="sort-arrows">{% if current_sort == 'modified' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
+                </a>
+            </th>
+            <th>
+                <a href="?tab={{ tab }}&{{ sort_param }}=assigned_to&{{ order_param }}={% if current_sort == 'assigned_to' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="sort-header {% if current_sort == 'assigned_to' %}active{% endif %}">
+                    Assigned to <span class="sort-arrows">{% if current_sort == 'assigned_to' %}{% if current_order == 'asc' %}▲{% else %}▼{% endif %}{% else %}⇅{% endif %}</span>
                 </a>
             </th>
         </tr>
@@ -44,12 +54,26 @@
     <tbody>
         {% for issue in issues %}
         <tr>
-            <td><a href="{% url 'issue_detail' issue.id %}">#{{ issue.id }}</a></td>
-            <td>{{ issue.get_issue_type_display }}</td>
-            <td><a href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a></td>
-            <td>{{ issue.get_status_display }}</td>
-            <td>{{ issue.get_severity_display }}</td>
+            <td><span class="badge badge-type-{{ issue.issue_type }}">{{ issue.get_issue_type_display }}</span></td>
+            <td><span class="badge badge-severity-{{ issue.severity }}">{{ issue.get_severity_display }}</span></td>
+            <td><span class="badge badge-priority-{{ issue.priority }}">{{ issue.get_priority_display }}</span></td>
+            <td><a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a></td>
+            <td>
+                <form method="post" action="{% url 'issue_update_status' issue.id %}" class="status-inline-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <select name="status" class="status-select">
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if issue.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="status-save-btn" title="Save">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    </button>
+                </form>
+            </td>
             <td>{{ issue.modified_at|date:"d M Y" }}</td>
+            <td>{{ issue.assigned_to|default:"-" }}</td>
         </tr>
         {% endfor %}
     </tbody>
