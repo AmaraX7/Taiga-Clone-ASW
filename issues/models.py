@@ -37,7 +37,6 @@ class Issue(models.Model):
     issue_type  = models.CharField(max_length=20, choices=TYPE_CHOICES, default='bug')
     severity    = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='normal')
     priority    = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='normal')
-    # Añadimos el campo deadline que faltaba en tu modelo
     deadline    = models.DateField(null=True, blank=True)
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_issues')
     created_by  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_issues')
@@ -52,7 +51,6 @@ class Issue(models.Model):
 
     @property
     def deadline_status(self):
-        """Calcula el color del reloj basado en la fecha límite puramente en Python."""
         if not self.deadline:
             return None
             

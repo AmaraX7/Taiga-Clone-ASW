@@ -9,6 +9,7 @@ class IssueForm(forms.ModelForm):
         widget=forms.DateInput(attrs={'type': 'date'}),
         label='Deadline',
     )
+    
     assigned_to = forms.ModelChoiceField(
         queryset=User.objects.all(),
         required=False,
