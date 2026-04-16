@@ -5,7 +5,7 @@
 {% block content %}
 <div class="issues-header">
     <h1>
-        #{{ issue.id }}
+        #{{ issue.id }} {{ issue.subject }}
         {% if issue.deadline %}
         <span class="deadline-clock-display status-{{ issue.deadline_status }}"
             title="Deadline: {{ issue.deadline|date:'d M Y' }}">
@@ -24,8 +24,8 @@
             </svg>
         </span>
         {% endif %}
-        {{ issue.subject }}
     </h1>
+
     <div style="display:flex; gap:8px; align-items:center;">
         {% if request.user == issue.created_by %}
         <a href="{% url 'issue_edit' issue.pk %}" class="btn btn-secondary">Edit issue</a>
@@ -52,17 +52,8 @@
         <div class="issue-detail-description">
             <p>{{ issue.description|default:"No description." }}</p>
         </div>
-      
-      
-        <!-- Status -->
-        <div class="issue-detail-section">
-            <h2>Status</h2>
-            <form method="post" action="{% url 'issue_update_status' issue.id %}">
-                {% csrf_token %}
-                {{ status_form.status }}
-                <button type="submit" class="btn btn-new">Update</button>
-            </form>
-        </div>
+
+
 
         <!-- Attachments -->
         <div class="issue-detail-section">
@@ -214,8 +205,10 @@
                 {% for w in watcher_list %}
                 <li>
                     <span class="sidebar-avatar">{{ w.user.username|slice:":1"|upper }}</span>
-                    <a class="watcher-username" href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
-                    <form method="post" action="{% url 'watcher_remove' issue.id w.user.id %}" class="sidebar-watcher-remove-form">
+                    <a class="watcher-username" href="{% url 'profile_view' w.user.username %}">{{ w.user.username
+                        }}</a>
+                    <form method="post" action="{% url 'watcher_remove' issue.id w.user.id %}"
+                        class="sidebar-watcher-remove-form">
                         {% csrf_token %}
                         <button type="submit" class="btn-watcher-remove" title="Remove watcher">&times;</button>
                     </form>
@@ -296,8 +289,8 @@
             <a href="{% url 'issue_edit' issue.pk %}" class="sidebar-icon-btn" title="Edit issue">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9"/>
-                    <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                 </svg>
             </a>
             <a href="{% url 'issue_delete' issue.pk %}" class="sidebar-icon-btn" title="Delete issue">
