@@ -76,7 +76,7 @@ class IssueFeatureTests(TestCase):
 				'subject': 'Created from test',
 				'description': 'Issue body',
 				'assigned_to': self.assignee.id,
-				'status': self.status,
+				'status': self.status.id,
 			},
 		)
 
