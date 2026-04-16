@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Status: {{ status.name }}{% endblock %}
+
+{% block content %}
+<div class="form-header">
+    <h1>Edit status: {{ status.name }}</h1>
+</div>
+
+<div class="detail-card" style="max-width:480px;margin-top:24px;">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_name">Name</label>
+            <input type="text" id="id_name" name="name" value="{{ status.name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="id_color">Color</label>
+            <div class="color-input-wrapper">
+                <input type="color" id="id_color_picker" value="{{ status.color }}"
+                    oninput="document.getElementById('id_color').value=this.value">
+                <input type="text" id="id_color" name="color" value="{{ status.color }}"
+                    pattern="^#[0-9a-fA-F]{6}$" maxlength="7"
+                    oninput="syncPicker()">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="is_closed" {% if status.is_closed %}checked{% endif %}>
+                Closed status
+                <span style="font-size:12px;color:#70728f;margin-left:4px;">
+                    (issues with this status count as closed)
+                </span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-new">Save changes</button>
+            <a href="{% url 'settings_view' %}" class="btn btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.color-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.color-input-wrapper input[type="color"] {
+    width: 38px;
+    height: 38px;
+    padding: 2px;
+    border: 1px solid #d8dee9;
+    border-radius: 6px;
+    cursor: pointer;
+    background: none;
+}
+.color-input-wrapper input[type="text"] { width: 100px; }
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+</style>
+
+<script>
+function syncPicker() {
+    const val = document.getElementById('id_color').value;
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+        document.getElementById('id_color_picker').value = val;
+    }
+}
+</script>
+{% endblock %}

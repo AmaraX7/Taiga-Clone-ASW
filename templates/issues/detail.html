@@ -11,7 +11,7 @@
 <div class="detail-grid">
     <section class="detail-card">
         <h2>Details</h2>
-        <p><strong>Status:</strong> {{ issue.get_status_display }}</p>
+        <p><strong>Status:</strong> {{ issue.status.name }}</p>
         <p><strong>Type:</strong> {{ issue.get_issue_type_display }}</p>
         <p><strong>Priority:</strong> {{ issue.get_priority_display }}</p>
         <p><strong>Severity:</strong> {{ issue.get_severity_display }}</p>
@@ -20,6 +20,15 @@
         <p><strong>Description:</strong></p>
         <p>{{ issue.description|default:"No description." }}</p>
     </section>
+    
+	<section class="detail-card">
+		<h2>Status</h2>
+		<form method="post" action="{% url 'issue_update_status' issue.id %}">
+			{% csrf_token %}
+			{{ status_form.status }}
+			<button type="submit" class="btn btn-new">Update</button>
+		</form>
+	</section>
 
     <section class="detail-card">
         <h2>Watchers</h2>

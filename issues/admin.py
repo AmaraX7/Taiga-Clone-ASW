@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import Attachment, Comment, Issue, Watcher
+from .models import Attachment, Comment, Issue, IssueStatus, Watcher
+
+@admin.register(IssueStatus)
+class IssueStatusAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'slug', 'color', 'is_closed', 'order')
 
 @admin.register(Issue)
 class IssueAdmin(admin.ModelAdmin):
