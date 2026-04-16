@@ -128,7 +128,7 @@
 
         <!-- Status badge -->
         <div class="sidebar-status-bar">
-            <span class="badge badge-status-{{ issue.status }} badge-status-large">{{ issue.status.name }}</span>
+            <span class="badge badge-status-{{ issue.status.slug }} badge-status-large">{{ issue.status.name }}</span>
         </div>
 
         <!-- Metadata fields -->
@@ -182,20 +182,30 @@
                 {% for w in watcher_list %}
                 <li>
                     <span class="sidebar-avatar">{{ w.user.username|slice:":1"|upper }}</span>
-                    <a href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
+                    <a class="watcher-username" href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
+                    <form method="post" action="{% url 'watcher_remove' issue.id w.user.id %}" class="sidebar-watcher-remove-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-watcher-remove" title="Remove watcher">&times;</button>
+                    </form>
                 </li>
                 {% endfor %}
             </ul>
             {% endif %}
+            <form method="post" action="{% url 'watcher_add' issue.id %}" class="sidebar-assign-form">
+                {% csrf_token %}
+                {{ watcher_form.user }}
+                <button type="submit" class="btn btn-secondary btn-sm">Add</button>
+            </form>
             <div class="sidebar-watch-actions">
                 {% if is_watching %}
-                <form method="post" action="{% url 'watcher_remove' issue.id %}">
+                <form method="post" action="{% url 'watcher_remove' issue.id request.user.id %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-cancel btn-sm">Unwatch</button>
                 </form>
                 {% else %}
                 <form method="post" action="{% url 'watcher_add' issue.id %}">
                     {% csrf_token %}
+                    <input type="hidden" name="user" value="{{ request.user.id }}">
                     <button type="submit" class="btn btn-secondary btn-sm">Watch</button>
                 </form>
                 {% endif %}
@@ -539,20 +549,40 @@
         margin-bottom: 8px;
     }
 
-    .sidebar-user,
-    .sidebar-watcher-list li {
+    .sidebar-user {
         display: flex;
         align-items: center;
         gap: 8px;
         font-size: 0.88rem;
         color: #374151;
         margin-bottom: 6px;
-        list-style: none;
     }
 
     .sidebar-watcher-list {
         padding: 0;
         margin: 0 0 8px;
+    }
+
+    .sidebar-watcher-list li {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        list-style: none;
+        background: #eceff4;
+        border-radius: 14px;
+        padding: 3px 6px 3px 4px;
+        margin-bottom: 4px;
+    }
+
+    .watcher-username {
+        font-size: 0.85rem;
+        color: #2e3440;
+        text-decoration: none;
+        flex: 1;
+    }
+
+    .watcher-username:hover {
+        text-decoration: underline;
     }
 
     .sidebar-avatar {

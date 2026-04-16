@@ -15,7 +15,6 @@ class IssueForm(forms.ModelForm):
         empty_label='Unassigned',
         label='Assign to',
     )
-
     class Meta:
         model = Issue
         fields = ['subject', 'description', 'status', 'deadline', 'assigned_to']
@@ -30,6 +29,14 @@ class AssignIssueForm(forms.ModelForm):
         queryset=User.objects.all(),
         required=False,
         empty_label='Unassigned',
+    )
+
+
+class AddWatcherForm(forms.Form):
+    user = forms.ModelChoiceField(
+        queryset=User.objects.all(),
+        required=True,
+        empty_label='Select user...',
     )
 
 
