@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk insert issues{% endblock %}
+
+{% block content %}
+<div class="form-header" style="text-align: center;">
+    <h1>Bulk insert issues</h1>
+</div>
+
+<div class="form-container">
+    <form method="post" class="issue-form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="{{ form.issues_text.id_for_label }}">{{ form.issues_text.label }}</label>
+            {{ form.issues_text }}
+            <p class="field-help">{{ form.issues_text.help_text }}</p>
+            {% if form.issues_text.errors %}
+            <ul class="field-errors">
+                {% for error in form.issues_text.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+            {{ form.status }}
+            {% if form.status.errors %}
+            <ul class="field-errors">
+                {% for error in form.status.errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-new">Insert</button>
+            <a href="{% url 'issue_list' %}" class="btn btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -92,7 +92,7 @@ docker-compose up
 1. Accedeix a [Google Cloud Console](https://console.cloud.google.com)
 2. Crea un projecte nou
 3. APIs & Services → Credentials → Create OAuth 2.0 Client ID
-4. Afegeix aquesta URI de redirecció: `http://localhost:8000/accounts/google/callback/`
+4. Afegeix aquesta URI de redirecció: `http://localhost:8000/accounts/google/login/callback/`
 5. Copia el **Client ID** i el **Client Secret** al teu `.env`
 6. Arrenca el servidor i accedeix a http://localhost:8000/admin
 7. Sites → canvia `example.com` per `localhost:8000`

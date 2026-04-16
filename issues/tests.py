@@ -3,7 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Attachment, Comment, Issue, IssueStatus
+from .models import Attachment, Comment, Issue, IssueActivity, IssueStatus
 
 
 class IssueFeatureTests(TestCase):
@@ -186,3 +186,64 @@ class IssueFeatureTests(TestCase):
 
 		self.assertEqual(response.status_code, 403)
 		self.assertTrue(Comment.objects.filter(id=comment.id).exists())
+
+	def test_issue_edit_forbidden_for_non_creator(self):
+		self.client.force_login(self.other_user)
+
+		response = self.client.post(
+			reverse('issue_edit', args=[self.issue.id]),
+			{
+				'subject': 'Hacked subject',
+				'description': 'Hacked description',
+				'status': self.status.id,
+				'assigned_to': self.assignee.id,
+			},
+		)
+
+		self.assertEqual(response.status_code, 403)
+		self.issue.refresh_from_db()
+		self.assertEqual(self.issue.subject, 'Sample issue')
+
+	def test_issue_edit_updates_fields_for_creator(self):
+		response = self.client.post(
+			reverse('issue_edit', args=[self.issue.id]),
+			{
+				'subject': 'Edited issue',
+				'description': 'Edited description',
+				'status': self.status.id,
+				'assigned_to': self.assignee.id,
+			},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		self.issue.refresh_from_db()
+		self.assertEqual(self.issue.subject, 'Edited issue')
+		self.assertEqual(self.issue.description, 'Edited description')
+		self.assertEqual(self.issue.assigned_to, self.assignee)
+
+	def test_bulk_insert_creates_multiple_issues(self):
+		response = self.client.post(
+			reverse('issue_bulk_insert'),
+			{
+				'issues_text': 'Bulk one | First description\nBulk two\n\nBulk three | Third description',
+				'status': self.status.id,
+			},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		self.assertTrue(Issue.objects.filter(subject='Bulk one').exists())
+		self.assertTrue(Issue.objects.filter(subject='Bulk two').exists())
+		self.assertTrue(Issue.objects.filter(subject='Bulk three').exists())
+
+	def test_issue_detail_lists_activities(self):
+		IssueActivity.objects.create(
+			issue=self.issue,
+			actor=self.creator,
+			action='created issue',
+			details='Sample issue',
+		)
+
+		response = self.client.get(reverse('issue_detail', args=[self.issue.id]))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'created issue')
