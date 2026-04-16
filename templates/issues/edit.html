@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Issue #{{ issue.id }}{% endblock %}
+
+{% block content %}
+<div class="issues-header">
+    <h1>
+        Edit Issue #{{ issue.id }}
+
+    </h1>
+</div>
+
+
+<form method="post" id="edit-issue-form">
+    {% csrf_token %}
+
+    <div class="issue-detail-layout">
+
+        <!-- COLUMNA ESQUERRA: camps principals -->
+        <div class="issue-detail-main">
+
+            <div class="issue-detail-meta-bar">
+                <span class="issue-detail-label">ISSUE</span>
+                <span class="issue-detail-created">
+                    Created by <strong>{{ issue.created_by }}</strong>
+                    &nbsp;{{ issue.created_at|date:"d M Y H:i" }}
+                </span>
+            </div>
+
+            <!-- Subject -->
+            <div class="edit-field-block">
+                <label class="edit-field-label" for="{{ form.subject.id_for_label }}">Subject</label>
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                <ul class="field-errors">
+                    {% for error in form.subject.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div class="edit-field-block">
+                <label class="edit-field-label" for="{{ form.description.id_for_label }}">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <ul class="field-errors">
+                    {% for error in form.description.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+
+            <!-- Tags -->
+            <div class="edit-field-block">
+                <label class="edit-field-label" for="{{ form.tags.id_for_label }}">Tags</label>
+                {{ form.tags }}
+            </div>
+
+            <div class="edit-form-actions">
+                <button type="submit" class="btn btn-new">Save changes</button>
+                <a href="{% url 'issue_detail' issue.pk %}" class="btn btn-cancel">Cancel</a>
+            </div>
+
+        </div>
+
+        <!-- COLUMNA DRETA: sidebar amb metadades editables -->
+        <aside class="issue-detail-sidebar">
+
+            <!-- Status -->
+            <div class="edit-sidebar-header">
+                <span class="sidebar-section-title" style="margin-bottom:0;">Status</span>
+            </div>
+            <div class="sidebar-select-field-wrap">
+                {{ form.status }}
+            </div>
+
+            <!-- Type -->
+            <div class="sidebar-select-field-wrap">
+                <span class="sidebar-label">type</span>
+                {{ form.issue_type }}
+            </div>
+
+            <!-- Severity -->
+            <div class="sidebar-select-field-wrap">
+                <span class="sidebar-label">severity</span>
+                {{ form.severity }}
+            </div>
+
+            <!-- Priority -->
+            <div class="sidebar-select-field-wrap">
+                <span class="sidebar-label">priority</span>
+                {{ form.priority }}
+            </div>
+
+            <hr class="sidebar-divider">
+
+            <!-- Assigned to -->
+            <div class="sidebar-section">
+                <span class="sidebar-section-title">ASSIGNED TO</span>
+                {{ form.assigned_to }}
+            </div>
+
+            <hr class="sidebar-divider">
+
+            <!-- Deadline -->
+            <div class="sidebar-section">
+                <span class="sidebar-section-title">DEADLINE</span>
+                {{ form.deadline }}
+                {% if form.deadline.errors %}
+                <ul class="field-errors">{% for e in form.deadline.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+
+        </aside>
+    </div>
+</form>
+
+<style>
+    /* ── Layout (igual que el detail) ── */
+    .issue-detail-layout {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 24px;
+        align-items: start;
+        margin-top: 16px;
+    }
+
+    .issue-detail-main {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .issue-detail-meta-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0 12px;
+        border-bottom: 1px solid #e8e8e8;
+        margin-bottom: 16px;
+    }
+
+    .issue-detail-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        color: #9b9fb0;
+        text-transform: uppercase;
+    }
+
+    .issue-detail-created {
+        font-size: 0.83rem;
+        color: #6b7280;
+    }
+
+    /* ── Camps del formulari (columna esquerra) ── */
+    .edit-field-block {
+        padding: 16px 0;
+        border-bottom: 1px solid #e8e8e8;
+    }
+
+    .edit-field-label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+
+    .edit-field-block input[type="text"],
+    .edit-field-block textarea {
+        width: 100%;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 0.92rem;
+        resize: vertical;
+        box-sizing: border-box;
+        color: #374151;
+        transition: border-color 0.15s;
+    }
+
+    .edit-field-block input[type="text"]:focus,
+    .edit-field-block textarea:focus {
+        border-color: #40c4b5;
+        outline: none;
+    }
+
+    .edit-field-block select {
+        width: 100%;
+        font-size: 0.88rem;
+        padding: 8px 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        color: #374151;
+        background: #fff;
+    }
+
+    .edit-form-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 20px;
+    }
+
+    .field-errors {
+        list-style: none;
+        padding: 0;
+        margin: 4px 0 0;
+        color: #de3b53;
+        font-size: 0.82rem;
+    }
+
+    /* ── Sidebar (igual que el detail) ── */
+    .issue-detail-sidebar {
+        background: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 8px;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .edit-sidebar-header {
+        padding: 14px 16px 10px;
+        border-bottom: 1px solid #e8e8e8;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .sidebar-select-field-wrap {
+        padding: 8px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .sidebar-select-field-wrap select {
+        width: 100%;
+        font-size: 0.85rem;
+        padding: 5px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        color: #374151;
+        background: #fff;
+    }
+
+    .sidebar-select-field-wrap select:focus {
+        border-color: #40c4b5;
+        outline: none;
+    }
+
+    .sidebar-label {
+        color: #9b9fb0;
+        font-size: 0.82rem;
+        text-transform: lowercase;
+    }
+
+    .sidebar-section-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        color: #9b9fb0;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .sidebar-divider {
+        margin: 0;
+        border: none;
+        border-top: 1px solid #e8e8e8;
+    }
+
+    .sidebar-section {
+        padding: 12px 16px;
+    }
+
+    .sidebar-section select,
+    .sidebar-section input[type="date"] {
+        width: 100%;
+        font-size: 0.85rem;
+        padding: 5px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        color: #374151;
+        background: #fff;
+        box-sizing: border-box;
+    }
+
+    .sidebar-section select:focus,
+    .sidebar-section input[type="date"]:focus {
+        border-color: #40c4b5;
+        outline: none;
+    }
+
+    /* ── Reloj de deadline (header) ── */
+    .deadline-clock-display {
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        margin-right: 4px;
+    }
+
+    .deadline-clock-display.no-deadline {
+        opacity: 0.3;
+    }
+
+    .deadline-clock-display.status-red {
+        color: #de3b53;
+    }
+
+    .deadline-clock-display.status-orange {
+        color: #f39200;
+    }
+
+    .deadline-clock-display.status-green {
+        color: #9bc300;
+    }
+</style>
+{% endblock %}

@@ -1,17 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{% if is_edit %}Edit issue{% else %}New issue{% endif %}{% endblock %}
+{% block title %}New issue{% endblock %}
 
 {% block content %}
 <div class="form-header" style="text-align: center;">
-    <h1>{% if is_edit %}Edit issue{% else %}New issue{% endif %}</h1>
+    <h1>New issue</h1>
 </div>
 
-{% if not is_edit %}
 <div style="text-align:center; margin-bottom: 16px;">
     <a href="{% url 'issue_bulk_insert' %}" class="btn btn-secondary">Bulk insert</a>
 </div>
-{% endif %}
 
 <div class="form-container">
     <form method="post" class="issue-form">
@@ -65,23 +63,17 @@
             {{ form.description }}
             {% if form.description.errors %}
             <ul class="field-errors">
-                {% for error in form.description.errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
+                {% for error in form.description.errors %}<li>{{ error }}</li>{% endfor %}
             </ul>
             {% endif %}
         </div>
-        
-        
 
         <div class="form-group">
             <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
             {{ form.status }}
             {% if form.status.errors %}
             <ul class="field-errors">
-                {% for error in form.status.errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
+                {% for error in form.status.errors %}<li>{{ error }}</li>{% endfor %}
             </ul>
             {% endif %}
         </div>
@@ -106,21 +98,18 @@
             {{ form.tags }}
         </div>
 
-
         <div class="form-group">
             <label for="{{ form.assigned_to.id_for_label }}">{{ form.assigned_to.label }}</label>
             {{ form.assigned_to }}
             {% if form.assigned_to.errors %}
             <ul class="field-errors">
-                {% for error in form.assigned_to.errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
+                {% for error in form.assigned_to.errors %}<li>{{ error }}</li>{% endfor %}
             </ul>
             {% endif %}
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-new">{% if is_edit %}Save{% else %}Create{% endif %}</button>
+            <button type="submit" class="btn btn-new">Create</button>
             <a href="{% url 'issue_list' %}" class="btn btn-cancel">Cancel</a>
         </div>
     </form>

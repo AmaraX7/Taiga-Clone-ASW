@@ -151,10 +151,9 @@ def issue_edit(request, issue_id):
 
     return render(
         request,
-        'issues/new.html',
+        'issues/edit.html',
         {
             'form': form,
-            'is_edit': True,
             'issue': issue,
         },
     )
