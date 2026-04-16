@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+
+set -eu
+
+run_tests() {
+  if command -v docker-compose >/dev/null 2>&1; then
+    docker-compose exec -T web python manage.py test
+    return
+  fi
+
+  if command -v docker >/dev/null 2>&1; then
+    docker compose exec -T web python manage.py test
+    return
+  fi
+
+  echo "No se encontro docker-compose ni docker compose para ejecutar tests." >&2
+  exit 1
+}
+
+echo "Running test suite before push..."
+run_tests
+
+echo "Tests passed. Push allowed."

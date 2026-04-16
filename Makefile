@@ -1,7 +1,7 @@
 COMPOSE ?= docker-compose
 WEB ?= web
 
-.PHONY: help up build down restart logs ps shell migrate makemigrations createsuperuser test check
+.PHONY: help up build down restart logs ps shell migrate makemigrations createsuperuser test check install-hooks
 
 help:
 	@echo "Comandos disponibles:"
@@ -17,6 +17,7 @@ help:
 	@echo "  make createsuperuser - Crea superusuario"
 	@echo "  make test            - Ejecuta tests"
 	@echo "  make check           - Django check"
+	@echo "  make install-hooks   - Instala hooks de git locales"
 
 up:
 	$(COMPOSE) up
@@ -54,3 +55,7 @@ test:
 
 check:
 	$(COMPOSE) exec $(WEB) python manage.py check
+
+install-hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks configurados en .githooks"

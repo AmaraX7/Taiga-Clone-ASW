@@ -1,17 +1,32 @@
 from pathlib import Path
+import sys
 from django.core.exceptions import ImproperlyConfigured
 from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+IS_TEST = 'test' in sys.argv
 
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = ['*']
+
+default_allowed_hosts = ['localhost', '127.0.0.1']
+render_external_hostname = config('RENDER_EXTERNAL_HOSTNAME', default='').strip()
+if render_external_hostname:
+    default_allowed_hosts.append(render_external_hostname)
+
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=','.join(default_allowed_hosts), cast=Csv())
+
+default_csrf_origins = ['http://localhost:8000', 'http://127.0.0.1:8000', 'https://*.onrender.com']
+if render_external_hostname:
+    default_csrf_origins.append(f'https://{render_external_hostname}')
+
 CSRF_TRUSTED_ORIGINS = config(
     'CSRF_TRUSTED_ORIGINS',
-    default='https://*.onrender.com,http://localhost:8000,http://127.0.0.1:8000',
+    default=','.join(default_csrf_origins),
     cast=Csv(),
 )
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -43,6 +58,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 ]
+
+if not IS_TEST:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -120,6 +138,9 @@ AWS_S3_FILE_OVERWRITE = False
 if not STORAGE_BACKEND:
     STORAGE_BACKEND = 's3' if AWS_STORAGE_BUCKET_NAME else 'local'
 
+if IS_TEST:
+    STORAGE_BACKEND = 'local'
+
 if STORAGE_BACKEND == 's3':
     if not AWS_STORAGE_BUCKET_NAME:
         raise ImproperlyConfigured(
@@ -127,24 +148,30 @@ if STORAGE_BACKEND == 's3':
         )
     STORAGES = {
         'default': {'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage'},
-        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
     }
 elif STORAGE_BACKEND == 'local':
-    if not DEBUG:
+    if not DEBUG and not IS_TEST:
         raise ImproperlyConfigured(
             'Production requires external storage. Set STORAGE_BACKEND=s3 and configure AWS variables.'
         )
     STORAGES = {
         'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+        'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
     }
 else:
     raise ImproperlyConfigured(
         'Invalid STORAGE_BACKEND. Supported values are: local, s3.'
     )
 
+if IS_TEST:
+    STORAGES['staticfiles'] = {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    }
+
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
