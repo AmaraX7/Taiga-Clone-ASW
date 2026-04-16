@@ -128,7 +128,7 @@ def issue_new(request):
             issue.created_by = request.user
             issue.save()
             _add_activity(issue, request.user, 'created issue', issue.subject)
-            return redirect('issue_detail', issue_id=issue.id)
+            return redirect('issue_list')
     else:
         form = IssueForm()
     return render(request, 'issues/new.html', {'form': form})

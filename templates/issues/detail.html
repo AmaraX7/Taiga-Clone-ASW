@@ -5,7 +5,7 @@
 {% block content %}
 <div class="issues-header">
     <h1>
-        #{{ issue.id }} {{ issue.subject }}
+        #{{ issue.id }}
         {% if issue.deadline %}
         <span class="deadline-clock-display status-{{ issue.deadline_status }}"
             title="Deadline: {{ issue.deadline|date:'d M Y' }}">
@@ -24,6 +24,7 @@
             </svg>
         </span>
         {% endif %}
+        {{ issue.subject }}
     </h1>
     <a href="{% url 'issue_list' %}" class="btn btn-cancel">Back to list</a>
 </div>
