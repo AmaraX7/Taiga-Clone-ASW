@@ -31,9 +31,9 @@ SORTABLE_FIELDS = {
 }
 
 FILTER_FIELDS = {
-    'type': 'issue_type',
-    'severity': 'severity',
-    'priority': 'priority',
+    'type': 'issue_type__slug',
+    'severity': 'severity__slug',
+    'priority': 'priority__slug',
     'status': 'status',
     'assigned_to': 'assigned_to__id',
     'created_by': 'created_by__id',
@@ -224,8 +224,8 @@ def issue_delete(request, issue_id):
 @login_required
 def issue_detail(request, issue_id):
     issue = get_object_or_404(
-        Issue.objects.select_related('created_by', 'assigned_to')
-                     .prefetch_related('attachments', 'comments__author', 'watchers__user'),
+        Issue.objects.select_related('created_by', 'assigned_to', 'status', 'issue_type', 'severity', 'priority')
+                     .prefetch_related('attachments', 'comments__author', 'watchers__user', 'tags'),
         pk=issue_id,
     )
     is_watching  = issue.watchers.filter(user=request.user).exists()
@@ -233,7 +233,7 @@ def issue_detail(request, issue_id):
     assign_form = AssignIssueForm(instance=issue)
     watcher_form = AddWatcherForm()
     attachment_form = AttachmentForm()
-    status_form = IssueStatusForm(instance=issue)
+    all_statuses = IssueStatus.objects.all()
     activities = issue.activities.select_related('actor').all()
     return render(
         request,
@@ -243,7 +243,7 @@ def issue_detail(request, issue_id):
             'assign_form': assign_form,
             'watcher_form': watcher_form,
             'attachment_form': attachment_form,
-            'status_form': status_form,
+            'all_statuses': all_statuses,
             'is_watching': is_watching,
             'watcher_list': watcher_list,
             'activities': activities,

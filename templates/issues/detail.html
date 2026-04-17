@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Issue #{{ issue.id }}{% endblock %}
+{% block title %}{{ issue.subject }}{% endblock %}
 
 {% block content %}
 <div class="issues-header">
     <h1>
-        #{{ issue.id }} {{ issue.subject }}
         {% if issue.deadline %}
         <span class="deadline-clock-display status-{{ issue.deadline_status }}"
             title="Deadline: {{ issue.deadline|date:'d M Y' }}">
@@ -24,6 +23,7 @@
             </svg>
         </span>
         {% endif %}
+        {{ issue.subject }}
     </h1>
 
     <div style="display:flex; gap:8px; align-items:center;">
@@ -36,9 +36,18 @@
     <!-- COLUMNA ESQUERRA: contingut principal -->
     <div class="issue-detail-main">
 
-        <!-- Capçalera: tag + creador -->
+        <!-- Capçalera: ISSUE label + tags + creador -->
         <div class="issue-detail-meta-bar">
-            <span class="issue-detail-label">ISSUE</span>
+            <div class="meta-bar-left">
+                <span class="issue-detail-label">ISSUE</span>
+                {% if issue.tags.all %}
+                <div class="issue-tags">
+                    {% for tag in issue.tags.all %}
+                    <span class="issue-tag" style="background: {{ tag.color }}22; color: {{ tag.color }}; border: 1px solid {{ tag.color }}55;">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
             <span class="issue-detail-created">
                 Created by <strong>{{ issue.created_by }}</strong>
                 &nbsp;{{ issue.created_at|date:"d M Y H:i" }}
@@ -50,33 +59,43 @@
             <p>{{ issue.description|default:"No description." }}</p>
         </div>
 
-
-
         <!-- Attachments -->
         <div class="issue-detail-section">
-            <div class="issue-section-header">
-                <span>{{ issue.attachments.count }} Attachment{{ issue.attachments.count|pluralize }}</span>
-                <form method="post" action="{% url 'attachment_add' issue.id %}" enctype="multipart/form-data"
-                    class="attachment-upload-form">
-                    {% csrf_token %}
-                    {{ attachment_form.file }}
-                    <button type="submit" class="btn-icon-add" title="Add attachment">+</button>
-                </form>
-            </div>
+            <form method="post" action="{% url 'attachment_add' issue.id %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" id="attachment-file-input" name="file" style="display:none;">
+                <div class="issue-section-header">
+                    <span>{{ issue.attachments.count }} Attachment{{ issue.attachments.count|pluralize }}</span>
+                    <button type="submit" class="btn-icon-add" title="Upload selected file">+</button>
+                </div>
+                <label for="attachment-file-input" class="attachment-drop-zone">
+                    Drop attachments here!
+                </label>
+            </form>
             {% if issue.attachments.all %}
-            <ul class="item-list" style="margin-top: 8px;">
+            <ul class="attachment-list">
                 {% for attachment in issue.attachments.all %}
-                <li class="item-row">
+                <li class="attachment-item">
                     <div class="attachment-content">
-                        {% with attachment.file.name|lower as filename_lower %}
-                            {% if '.png' in filename_lower or '.jpg' in filename_lower or '.jpeg' in filename_lower or '.gif' in filename_lower or '.webp' in filename_lower %}
-                                <a href="{{ attachment.file.url }}" target="_blank" rel="noopener" class="attachment-thumb-link">
-                                    <img src="{{ attachment.file.url }}" alt="Attachment preview" class="attachment-thumb">
-                                </a>
-                            {% endif %}
+                        {% with attachment.file.name|lower as fname %}
+                        {% if '.png' in fname or '.jpg' in fname or '.jpeg' in fname or '.gif' in fname or '.webp' in fname %}
+                        <a href="{{ attachment.file.url }}" target="_blank" rel="noopener" class="attachment-thumb-link">
+                            <img src="{{ attachment.file.url }}" alt="Attachment preview" class="attachment-thumb">
+                        </a>
+                        {% else %}
+                        <span class="attachment-file-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                        </span>
+                        {% endif %}
                         {% endwith %}
-                        <a href="{{ attachment.file.url }}" target="_blank" rel="noopener" class="attachment-link">{{ attachment.file.name|cut:"issues/attachments/" }}</a>
-                        <span class="comment-meta">by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
+                        <div class="attachment-info">
+                            <a href="{{ attachment.file.url }}" target="_blank" rel="noopener" class="attachment-link">{{ attachment.file.name|cut:"issues/attachments/" }}</a>
+                            <span class="comment-meta">by {{ attachment.uploaded_by }} · {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
                     </div>
                     {% if request.user == attachment.uploaded_by %}
                     <form method="post" action="{% url 'attachment_delete' issue.id attachment.id %}">
@@ -90,62 +109,72 @@
             {% endif %}
         </div>
 
-        <!-- Comments -->
-        <div class="issue-detail-section">
-            <div class="issue-comments-tabs">
-                <span class="tab active">{{ issue.comments.count }} Comment{{ issue.comments.count|pluralize }}</span>
+        <!-- Comments + Activities — tabs CSS :checked -->
+        <div class="issue-tabs-section">
+            <input type="radio" name="issue-tab" id="tab-comments" checked class="tab-radio">
+            <input type="radio" name="issue-tab" id="tab-activity" class="tab-radio">
+
+            <div class="issue-tabs-header">
+                <label for="tab-comments" class="tab-label tab-label-comments">
+                    {{ issue.comments.count }} Comment{{ issue.comments.count|pluralize }}
+                </label>
+                <label for="tab-activity" class="tab-label tab-label-activity">
+                    {{ activities|length }} Activit{{ activities|length|pluralize:"y,ies" }}
+                </label>
             </div>
 
-            <form method="post" action="{% url 'comment_add' issue.id %}" class="comment-form">
-                {% csrf_token %}
-                <textarea name="text" placeholder="Type a new comment here" rows="4" required></textarea>
-                <button type="submit" class="btn btn-new">Post comment</button>
-            </form>
+            <div class="tab-panel tab-panel-comments">
+                <form method="post" action="{% url 'comment_add' issue.id %}" class="comment-form">
+                    {% csrf_token %}
+                    <textarea name="text" placeholder="Type a new comment here" rows="4" required></textarea>
+                    <button type="submit" class="btn btn-new">Post comment</button>
+                </form>
 
-            {% if issue.comments.all %}
-            <ul class="item-list comments-list" style="margin-top: 16px;">
-                {% for comment in issue.comments.all %}
-                <li class="comment-item" id="comment-{{ comment.id }}">
-                    <p>{{ comment.text }}</p>
-                    <span class="comment-meta">by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i" }}</span>
-                    {% if comment.modified_at|date:"YmdHi" != comment.created_at|date:"YmdHi" %}
-                    <span class="comment-meta">(edited {{ comment.modified_at|date:"d/m/Y H:i" }})</span>
-                    {% endif %}
-                    {% if request.user == comment.author %}
-                    <div class="comment-actions">
-                        <a href="{% url 'comment_edit' comment.id %}" class="btn btn-secondary">Edit</a>
-                        <form method="post" action="{% url 'comment_delete' comment.id %}" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
-                    </div>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-
-        <!-- Activities -->
-        <div class="issue-detail-section">
-            <div class="issue-comments-tabs">
-                <span class="tab active">{{ activities|length }} Activit{{ activities|length|pluralize:"y,ies" }}</span>
+                {% if issue.comments.all %}
+                <ul class="item-list comments-list" style="margin-top: 16px;">
+                    {% for comment in issue.comments.all %}
+                    <li class="comment-item" id="comment-{{ comment.id }}">
+                        <p>{{ comment.text }}</p>
+                        <span class="comment-meta">by {{ comment.author }} on {{ comment.created_at|date:"d/m/Y H:i" }}</span>
+                        {% if comment.modified_at|date:"YmdHi" != comment.created_at|date:"YmdHi" %}
+                        <span class="comment-meta">(edited {{ comment.modified_at|date:"d/m/Y H:i" }})</span>
+                        {% endif %}
+                        {% if request.user == comment.author %}
+                        <div class="comment-actions">
+                            <a href="{% url 'comment_edit' comment.id %}" class="btn btn-secondary">Edit</a>
+                            <form method="post" action="{% url 'comment_delete' comment.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
             </div>
-            {% if activities %}
-            <ul class="item-list comments-list" style="margin-top: 8px;">
-                {% for activity in activities %}
-                <li class="comment-item">
-                    <p><strong>{{ activity.actor.username }}</strong> {{ activity.action }}</p>
-                    {% if activity.details %}
-                    <p class="comment-text">{{ activity.details }}</p>
-                    {% endif %}
-                    <span class="comment-meta">{{ activity.created_at|date:"d/m/Y H:i" }}</span>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="empty-state">No activities yet.</p>
-            {% endif %}
+
+            <div class="tab-panel tab-panel-activity">
+                {% if activities %}
+                <ul class="activity-list">
+                    {% for activity in activities %}
+                    <li class="activity-item">
+                        <div class="activity-dot"></div>
+                        <div class="activity-body">
+                            <span class="activity-actor">{{ activity.actor.username }}</span>
+                            <span class="activity-action">{{ activity.action }}</span>
+                            {% if activity.details %}
+                            <span class="activity-details">"{{ activity.details }}"</span>
+                            {% endif %}
+                            <span class="activity-time">· {{ activity.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="empty-state">No activities yet.</p>
+                {% endif %}
+            </div>
         </div>
 
     </div>
@@ -153,31 +182,43 @@
     <!-- COLUMNA DRETA: sidebar de metadades -->
     <aside class="issue-detail-sidebar">
 
-        <!-- Status badge -->
-        <div class="sidebar-status-bar">
-            <span class="badge badge-status-{{ issue.status.slug }} badge-status-large">{{ issue.status.name }}</span>
+        <!-- Status al estil Taiga -->
+        <div class="sidebar-status-block">
+            <span class="sidebar-status-name" style="color: {{ issue.status.color }}">{{ issue.status.name|upper }}</span>
+            <form method="post" action="{% url 'issue_update_status' issue.id %}" class="sidebar-status-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <select name="status" class="sidebar-status-select">
+                    {% for s in all_statuses %}
+                    <option value="{{ s.slug }}" {% if s.slug == issue.status.slug %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary btn-sm">Change</button>
+            </form>
         </div>
 
-        <!-- Metadata fields -->
+        <hr class="sidebar-divider">
+
+        <!-- Metadata fields estil Taiga -->
         <div class="sidebar-field">
             <span class="sidebar-label">type</span>
             <span class="sidebar-value">
-                {{ issue.issue_type_label }}
-                <span class="sidebar-dot sidebar-dot-type-{{ issue.issue_type }}"></span>
+                {{ issue.issue_type.name }}
+                <span class="sidebar-dot" style="background: {{ issue.issue_type.color }}"></span>
             </span>
         </div>
         <div class="sidebar-field">
             <span class="sidebar-label">severity</span>
             <span class="sidebar-value">
-                {{ issue.severity_label }}
-                <span class="sidebar-dot sidebar-dot-severity-{{ issue.severity }}"></span>
+                {{ issue.severity.name }}
+                <span class="sidebar-dot" style="background: {{ issue.severity.color }}"></span>
             </span>
         </div>
         <div class="sidebar-field">
             <span class="sidebar-label">priority</span>
             <span class="sidebar-value">
-                {{ issue.priority_label }}
-                <span class="sidebar-dot sidebar-dot-priority-{{ issue.priority }}"></span>
+                {{ issue.priority.name }}
+                <span class="sidebar-dot" style="background: {{ issue.priority.color }}"></span>
             </span>
         </div>
 
@@ -189,14 +230,28 @@
             {% if issue.assigned_to %}
             <div class="sidebar-user">
                 <span class="sidebar-avatar">{{ issue.assigned_to.username|slice:":1"|upper }}</span>
-                <span>{{ issue.assigned_to.username }}</span>
+                <a href="{% url 'profile_view' issue.assigned_to.username %}" class="watcher-username">{{ issue.assigned_to.username }}</a>
             </div>
             {% endif %}
-            <form method="post" action="{% url 'issue_assign' issue.id %}" class="sidebar-assign-form">
-                {% csrf_token %}
-                {{ assign_form.assigned_to }}
-                <button type="submit" class="btn btn-secondary btn-sm">Save</button>
-            </form>
+            <div class="sidebar-user-actions">
+                <input type="checkbox" id="assign-toggle" class="sidebar-toggle-checkbox">
+                <label for="assign-toggle" class="btn-link-action">+ Add assigned</label>
+                {% if issue.assigned_to != request.user %}
+                <span class="action-sep">|</span>
+                <form method="post" action="{% url 'issue_assign' issue.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="assigned_to" value="{{ request.user.id }}">
+                    <button type="submit" class="btn-link-action">Assign to me</button>
+                </form>
+                {% endif %}
+                <div class="sidebar-toggle-panel">
+                    <form method="post" action="{% url 'issue_assign' issue.id %}" class="sidebar-panel-form">
+                        {% csrf_token %}
+                        {{ assign_form.assigned_to }}
+                        <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+                    </form>
+                </div>
+            </div>
         </div>
 
         <hr class="sidebar-divider">
@@ -209,8 +264,7 @@
                 {% for w in watcher_list %}
                 <li>
                     <span class="sidebar-avatar">{{ w.user.username|slice:":1"|upper }}</span>
-                    <a class="watcher-username" href="{% url 'profile_view' w.user.username %}">{{ w.user.username
-                        }}</a>
+                    <a class="watcher-username" href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
                     <form method="post" action="{% url 'watcher_remove' issue.id w.user.id %}"
                         class="sidebar-watcher-remove-form">
                         {% csrf_token %}
@@ -220,24 +274,46 @@
                 {% endfor %}
             </ul>
             {% endif %}
-            <form method="post" action="{% url 'watcher_add' issue.id %}" class="sidebar-assign-form">
-                {% csrf_token %}
-                {{ watcher_form.user }}
-                <button type="submit" class="btn btn-secondary btn-sm">Add</button>
-            </form>
-            <div class="sidebar-watch-actions">
+            <div class="sidebar-user-actions">
+                <input type="checkbox" id="watcher-toggle" class="sidebar-toggle-checkbox">
+                <label for="watcher-toggle" class="btn-link-action">+ Add watcher</label>
+                <span class="action-sep">|</span>
                 {% if is_watching %}
                 <form method="post" action="{% url 'watcher_remove' issue.id request.user.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-cancel btn-sm">Unwatch</button>
+                    <button type="submit" class="btn-link-action">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="vertical-align:middle; margin-right:3px;">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                        Unwatch
+                    </button>
                 </form>
                 {% else %}
                 <form method="post" action="{% url 'watcher_add' issue.id %}">
                     {% csrf_token %}
                     <input type="hidden" name="user" value="{{ request.user.id }}">
-                    <button type="submit" class="btn btn-secondary btn-sm">Watch</button>
+                    <button type="submit" class="btn-link-action">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="vertical-align:middle; margin-right:3px;">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Watch
+                    </button>
                 </form>
                 {% endif %}
+                <div class="sidebar-toggle-panel">
+                    <form method="post" action="{% url 'watcher_add' issue.id %}" class="sidebar-panel-form">
+                        {% csrf_token %}
+                        {{ watcher_form.user }}
+                        <button type="submit" class="btn btn-secondary btn-sm">Add</button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -268,7 +344,6 @@
                         <input type="date" name="deadline" class="deadline-popup-input"
                             value="{{ issue.deadline|date:'Y-m-d' }}" placeholder="dd/mm/yyyy">
                         <div class="deadline-popup-presets">
-
                             <span class="deadline-preset">In one week</span>
                             <span class="deadline-preset">In two weeks</span>
                             <span class="deadline-preset">In one month</span>
@@ -339,6 +414,14 @@
         padding: 8px 0 12px;
         border-bottom: 1px solid #e8e8e8;
         margin-bottom: 16px;
+        gap: 12px;
+    }
+
+    .meta-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .issue-detail-label {
@@ -347,11 +430,28 @@
         letter-spacing: .08em;
         color: #9b9fb0;
         text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .issue-tags {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .issue-tag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 12px;
+        letter-spacing: .03em;
     }
 
     .issue-detail-created {
         font-size: 0.83rem;
         color: #6b7280;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     .issue-detail-description {
@@ -394,21 +494,64 @@
         justify-content: center;
     }
 
-    .attachment-upload-form {
-        display: flex;
-        align-items: center;
-        gap: 6px;
+    /* ── ATTACHMENT DROP ZONE ── */
+    .attachment-drop-zone {
+        display: block;
+        border: 2px dashed #d1d5db;
+        border-radius: 6px;
+        padding: 20px;
+        text-align: center;
+        color: #9b9fb0;
+        cursor: pointer;
+        margin-top: 8px;
+        font-size: 0.88rem;
+        transition: border-color 0.15s, background 0.15s;
     }
 
-    .attachment-upload-form input[type="file"] {
-        font-size: 0.8rem;
+    .attachment-drop-zone:hover {
+        border-color: #70b8d4;
+        background: #f0f9ff;
+        color: #6b7280;
+    }
+
+    /* ── ATTACHMENT LIST ── */
+    .attachment-list {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .attachment-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid #e8e8e8;
+        border-radius: 6px;
+        background: #fafafa;
     }
 
     .attachment-content {
         display: flex;
-        flex-direction: column;
-        gap: 6px;
+        align-items: center;
+        gap: 10px;
         min-width: 0;
+    }
+
+    .attachment-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .attachment-file-icon {
+        color: #9b9fb0;
+        flex-shrink: 0;
     }
 
     .attachment-link {
@@ -416,6 +559,7 @@
         text-decoration: none;
         font-weight: 600;
         word-break: break-word;
+        font-size: 0.88rem;
     }
 
     .attachment-link:hover {
@@ -424,31 +568,98 @@
 
     .attachment-thumb-link {
         display: inline-flex;
-        width: fit-content;
+        flex-shrink: 0;
     }
 
     .attachment-thumb {
-        width: 140px;
-        height: 100px;
+        width: 48px;
+        height: 48px;
         object-fit: cover;
-        border-radius: 8px;
+        border-radius: 4px;
         border: 1px solid #e5e7eb;
-        background: #f8fafc;
     }
 
-    .issue-comments-tabs {
-        margin-bottom: 12px;
+    /* ── TABS COMMENTS / ACTIVITIES ── */
+    .issue-tabs-section {
+        padding-top: 16px;
     }
 
-    .tab {
+    .tab-radio {
+        display: none;
+    }
+
+    .issue-tabs-header {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid #e8e8e8;
+        margin-bottom: 16px;
+    }
+
+    .tab-label {
         font-size: 0.9rem;
         font-weight: 600;
-        color: #374151;
-        border-bottom: 2px solid #374151;
-        padding-bottom: 4px;
-        display: inline-block;
+        color: #9b9fb0;
+        padding: 8px 16px 8px 0;
+        margin-right: 16px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        transition: color 0.15s, border-color 0.15s;
     }
 
+    .tab-label:hover {
+        color: #374151;
+    }
+
+    /* Default: comments tab active */
+    .tab-panel-activity {
+        display: none;
+    }
+    .tab-panel-comments {
+        display: block;
+    }
+    .tab-label-comments {
+        color: #374151;
+        border-bottom-color: #374151;
+    }
+    .tab-label-activity {
+        color: #9b9fb0;
+        border-bottom-color: transparent;
+    }
+
+    /* When activity radio checked */
+    #tab-activity:checked ~ .issue-tabs-header .tab-label-activity {
+        color: #374151;
+        border-bottom-color: #374151;
+    }
+    #tab-activity:checked ~ .issue-tabs-header .tab-label-comments {
+        color: #9b9fb0;
+        border-bottom-color: transparent;
+    }
+    #tab-activity:checked ~ .tab-panel-activity {
+        display: block;
+    }
+    #tab-activity:checked ~ .tab-panel-comments {
+        display: none;
+    }
+
+    /* When comments radio checked (restores default) */
+    #tab-comments:checked ~ .issue-tabs-header .tab-label-comments {
+        color: #374151;
+        border-bottom-color: #374151;
+    }
+    #tab-comments:checked ~ .issue-tabs-header .tab-label-activity {
+        color: #9b9fb0;
+        border-bottom-color: transparent;
+    }
+    #tab-comments:checked ~ .tab-panel-comments {
+        display: block;
+    }
+    #tab-comments:checked ~ .tab-panel-activity {
+        display: none;
+    }
+
+    /* ── COMMENTS ── */
     .comment-form textarea {
         width: 100%;
         border: 1px solid #e0e0e0;
@@ -462,6 +673,65 @@
 
     .comment-form button {
         margin-top: 8px;
+    }
+
+    /* ── ACTIVITIES ── */
+    .activity-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .activity-item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.87rem;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #70b8d4;
+        flex-shrink: 0;
+        margin-top: 5px;
+    }
+
+    .activity-body {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: baseline;
+        color: #6b7280;
+    }
+
+    .activity-actor {
+        font-weight: 700;
+        color: #374151;
+    }
+
+    .activity-action {
+        color: #374151;
+    }
+
+    .activity-details {
+        color: #6b7280;
+        font-style: italic;
+    }
+
+    .activity-time {
+        font-size: 0.8rem;
+        color: #9b9fb0;
     }
 
     /* ── DEADLINE CLOCK al títol ── */
@@ -488,6 +758,7 @@
         color: #9bc300;
     }
 
+    /* ── SIDEBAR ── */
     .issue-detail-sidebar {
         background: #fff;
         border: 1px solid #e8e8e8;
@@ -496,23 +767,37 @@
         overflow: visible;
     }
 
-    .sidebar-status-bar {
-        padding: 14px 16px;
+    /* Status al estil Taiga */
+    .sidebar-status-block {
+        padding: 14px 16px 12px;
         border-bottom: 1px solid #e8e8e8;
-        display: flex;
-        align-items: center;
-        gap: 10px;
         border-radius: 8px 8px 0 0;
     }
 
-    .badge-status-large {
-        font-size: 0.82rem;
-        padding: 4px 12px;
-        border-radius: 4px;
-        font-weight: 700;
+    .sidebar-status-name {
+        font-size: 1.05rem;
+        font-weight: 800;
         letter-spacing: .06em;
+        display: block;
+        margin-bottom: 10px;
     }
 
+    .sidebar-status-form {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .sidebar-status-select {
+        flex: 1;
+        font-size: 0.83rem;
+        padding: 4px 6px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        color: #374151;
+    }
+
+    /* Metadata fields estil Taiga */
     .sidebar-field {
         display: flex;
         justify-content: space-between;
@@ -531,72 +816,17 @@
     .sidebar-value {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 7px;
         font-weight: 500;
         color: #374151;
     }
 
     .sidebar-dot {
-        width: 10px;
-        height: 10px;
+        width: 11px;
+        height: 11px;
         border-radius: 50%;
         display: inline-block;
-    }
-
-    .sidebar-dot-type-bug {
-        background: #e11d48;
-    }
-
-    .sidebar-dot-type-question {
-        background: #8b5cf6;
-    }
-
-    .sidebar-dot-type-feature {
-        background: #2563eb;
-    }
-
-    .sidebar-dot-type-enhancement {
-        background: #0891b2;
-    }
-
-    .sidebar-dot-severity-critical {
-        background: #b91c1c;
-    }
-
-    .sidebar-dot-severity-high {
-        background: #ea580c;
-    }
-
-    .sidebar-dot-severity-normal {
-        background: #16a34a;
-    }
-
-    .sidebar-dot-severity-low {
-        background: #ca8a04;
-    }
-
-    .sidebar-dot-severity-wishlist {
-        background: #6b7280;
-    }
-
-    .sidebar-dot-severity-minor {
-        background: #ca8a04;
-    }
-
-    .sidebar-dot-severity-important {
-        background: #ea580c;
-    }
-
-    .sidebar-dot-priority-high {
-        background: #ef4444;
-    }
-
-    .sidebar-dot-priority-normal {
-        background: #22c55e;
-    }
-
-    .sidebar-dot-priority-low {
-        background: #eab308;
+        flex-shrink: 0;
     }
 
     .sidebar-divider {
@@ -625,12 +855,81 @@
         gap: 8px;
         font-size: 0.88rem;
         color: #374151;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }
 
+    .btn-link-action {
+        background: none;
+        border: none;
+        color: #008aa8;
+        font-size: 0.83rem;
+        cursor: pointer;
+        padding: 2px 0;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        white-space: nowrap;
+    }
+
+    .btn-link-action:hover {
+        text-decoration: underline;
+        color: #006a84;
+    }
+
+    /* Shared action row for both Assigned and Watchers */
+    .sidebar-user-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+        position: relative;
+    }
+
+    .sidebar-toggle-checkbox {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+    }
+
+    .sidebar-toggle-panel {
+        display: none;
+        width: 100%;
+        margin-top: 4px;
+    }
+
+    .sidebar-toggle-checkbox:checked ~ .sidebar-toggle-panel {
+        display: block;
+    }
+
+    .sidebar-panel-form {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .sidebar-panel-form select {
+        flex: 1;
+        font-size: 0.82rem;
+        padding: 4px 6px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        color: #374151;
+    }
+
+    .action-sep {
+        color: #d1d5db;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    /* ── WATCHERS LIST ── */
     .sidebar-watcher-list {
         padding: 0;
-        margin: 0 0 8px;
+        margin: 0 0 4px;
     }
 
     .sidebar-watcher-list li {
@@ -669,26 +968,7 @@
         flex-shrink: 0;
     }
 
-    .sidebar-assign-form {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-        margin-top: 8px;
-        flex-wrap: wrap;
-    }
-
-    .sidebar-assign-form select {
-        flex: 1;
-        font-size: 0.85rem;
-        padding: 4px 6px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-    }
-
-    .sidebar-watch-actions {
-        margin-top: 4px;
-    }
-
+    /* ── SIDEBAR ACTIONS ── */
     .sidebar-actions-row {
         display: flex;
         align-items: center;
@@ -738,6 +1018,7 @@
         opacity: 1;
     }
 
+    /* ── DEADLINE POPUP ── */
     .deadline-popup-checkbox {
         position: absolute;
         opacity: 0;
@@ -757,7 +1038,6 @@
         bottom: calc(100% + 8px);
         right: 0;
         left: auto;
-        transform: none;
         z-index: 300;
         background: #fff;
         border: 1px solid #e0e0e0;
@@ -768,7 +1048,7 @@
         text-align: left;
     }
 
-    .deadline-popup-checkbox:checked~.deadline-popup {
+    .deadline-popup-checkbox:checked ~ .deadline-popup {
         display: block;
     }
 
@@ -872,6 +1152,12 @@
     .btn-sm {
         font-size: 0.82rem;
         padding: 4px 10px;
+    }
+
+    .empty-state {
+        color: #9b9fb0;
+        font-size: 0.88rem;
+        padding: 12px 0;
     }
 
     @media (max-width: 768px) {
