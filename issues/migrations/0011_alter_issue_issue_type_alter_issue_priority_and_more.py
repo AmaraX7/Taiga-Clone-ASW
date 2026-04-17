@@ -7,29 +7,32 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("issues", "0010_alter_issue_issue_type_alter_issue_priority_and_more"),
+        ('issues', '0010_alter_issue_issue_type_alter_issue_priority_and_more'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="issue",
-            name="issue_type",
+            model_name='issue',
+            name='issue_type',
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="issues.issuetype"
+                on_delete=django.db.models.deletion.CASCADE,
+                to='issues.issuetype',
             ),
         ),
         migrations.AlterField(
-            model_name="issue",
-            name="priority",
+            model_name='issue',
+            name='priority',
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="issues.issuepriority"
+                on_delete=django.db.models.deletion.CASCADE,
+                to='issues.issuepriority',
             ),
         ),
         migrations.AlterField(
-            model_name="issue",
-            name="severity",
+            model_name='issue',
+            name='severity',
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="issues.issueseverity"
+                on_delete=django.db.models.deletion.CASCADE,
+                to='issues.issueseverity',
             ),
         ),
     ]

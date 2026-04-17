@@ -39,14 +39,13 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        #Nous camps
         migrations.AddField(
             model_name='issue',
             name='issue_type_new',
             field=models.ForeignKey(
                 to='issues.issuetype',
                 null=True,
-                on_delete=django.db.models.deletion.CASCADE
+                on_delete=django.db.models.deletion.CASCADE,
             ),
         ),
         migrations.AddField(
@@ -55,7 +54,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 to='issues.issuepriority',
                 null=True,
-                on_delete=django.db.models.deletion.CASCADE
+                on_delete=django.db.models.deletion.CASCADE,
             ),
         ),
         migrations.AddField(
@@ -64,14 +63,10 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 to='issues.issueseverity',
                 null=True,
-                on_delete=django.db.models.deletion.CASCADE
+                on_delete=django.db.models.deletion.CASCADE,
             ),
         ),
-
-        #Migrar dades
         migrations.RunPython(forwards),
-
-        #Borrar camps
         migrations.RemoveField(
             model_name='issue',
             name='issue_type',
@@ -84,8 +79,6 @@ class Migration(migrations.Migration):
             model_name='issue',
             name='severity',
         ),
-
-        #Renombrar camps
         migrations.RenameField(
             model_name='issue',
             old_name='issue_type_new',

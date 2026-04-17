@@ -318,8 +318,8 @@ def attachment_add(request, issue_id):
 
 @login_required
 def attachment_delete(request, issue_id, attachment_id):
-    issue = get_object_or_404(Issue, pk=issue_id)
-    attachment = get_object_or_404(Attachment, pk=attachment_id, issue=issue)
+    attachment = get_object_or_404(Attachment.objects.select_related('issue'), pk=attachment_id)
+    issue = attachment.issue
     if attachment.uploaded_by_id != request.user.id:
         raise PermissionDenied
     if request.method == 'POST':
@@ -327,7 +327,15 @@ def attachment_delete(request, issue_id, attachment_id):
         attachment.file.delete(save=False)
         attachment.delete()
         _add_activity(issue, request.user, 'deleted attachment', deleted_name)
-    return redirect('issue_detail', issue_id=issue.id)
+    # If a stale issue_id was posted, redirect to the real issue detail instead of 404.
+    target_issue_id = issue.id if issue.id != issue_id else issue_id
+    return redirect('issue_detail', issue_id=target_issue_id)
+
+
+@login_required
+def attachment_delete_legacy(request, attachment_id):
+    attachment = get_object_or_404(Attachment.objects.select_related('issue'), pk=attachment_id)
+    return attachment_delete(request, issue_id=attachment.issue_id, attachment_id=attachment_id)
 
 
 @login_required

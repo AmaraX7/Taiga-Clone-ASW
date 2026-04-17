@@ -106,6 +106,8 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% else %}
+            <p class="empty-state" style="margin-top: 8px;">No attachments yet.</p>
             {% endif %}
         </div>
 
@@ -262,7 +264,7 @@
             {% if watcher_list %}
             <ul class="sidebar-watcher-list">
                 {% for w in watcher_list %}
-                <li>
+                <li class="sidebar-watcher-item">
                     <span class="sidebar-avatar">{{ w.user.username|slice:":1"|upper }}</span>
                     <a class="watcher-username" href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
                     <form method="post" action="{% url 'watcher_remove' issue.id w.user.id %}"
@@ -273,6 +275,8 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% else %}
+            <p class="empty-state">No watchers yet.</p>
             {% endif %}
             <div class="sidebar-user-actions">
                 <input type="checkbox" id="watcher-toggle" class="sidebar-toggle-checkbox">
@@ -928,19 +932,43 @@
 
     /* ── WATCHERS LIST ── */
     .sidebar-watcher-list {
+        list-style: none;
         padding: 0;
         margin: 0 0 4px;
     }
 
-    .sidebar-watcher-list li {
+    .sidebar-watcher-item {
         display: flex;
         align-items: center;
         gap: 6px;
-        list-style: none;
         background: #eceff4;
         border-radius: 14px;
         padding: 3px 6px 3px 4px;
-        margin-bottom: 4px;
+    }
+
+    .sidebar-watcher-remove-form {
+        margin-left: auto;
+    }
+
+    .btn-watcher-remove {
+        background: transparent;
+        border: none;
+        color: #9b9fb0;
+        font-size: 1rem;
+        cursor: pointer;
+        line-height: 1;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-watcher-remove:hover {
+        background: #f6dce1;
+        color: #e44057;
     }
 
     .watcher-username {
