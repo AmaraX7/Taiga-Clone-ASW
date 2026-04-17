@@ -18,9 +18,9 @@ class IssueForm(forms.ModelForm):
         empty_label='Unassigned',
         label='Assign to',
     )
-    issue_type = forms.ChoiceField(required=False, label='Type')
-    severity = forms.ChoiceField(required=False, label='Severity')
-    priority = forms.ChoiceField(required=False, label='Priority')
+    #issue_type = forms.ChoiceField(required=False, label='Type')
+    #severity = forms.ChoiceField(required=False, label='Severity')
+    #priority = forms.ChoiceField(required=False, label='Priority')
     tags = forms.ModelMultipleChoiceField(
         queryset=IssueTag.objects.none(),
         required=False,
@@ -36,9 +36,9 @@ class IssueForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['issue_type'].choices = [(opt.slug, opt.name) for opt in IssueType.objects.all()]
-        self.fields['severity'].choices = [(opt.slug, opt.name) for opt in IssueSeverity.objects.all()]
-        self.fields['priority'].choices = [(opt.slug, opt.name) for opt in IssuePriority.objects.all()]
+        #self.fields['issue_type'].choices = [(opt.slug, opt.name) for opt in IssueType.objects.all()]
+        #self.fields['severity'].choices = [(opt.slug, opt.name) for opt in IssueSeverity.objects.all()]
+        #self.fields['priority'].choices = [(opt.slug, opt.name) for opt in IssuePriority.objects.all()]
         self.fields['tags'].queryset = IssueTag.objects.all()
         self.fields['due_date_preset'].queryset = DueDatePreset.objects.all()
 
@@ -46,9 +46,9 @@ class IssueForm(forms.ModelForm):
         issue = super().save(commit=False)
 
         # Keep existing values on edit; apply model defaults on create when fields are omitted.
-        issue.issue_type = self.cleaned_data.get('issue_type') or issue.issue_type or 'bug'
-        issue.severity = self.cleaned_data.get('severity') or issue.severity or 'normal'
-        issue.priority = self.cleaned_data.get('priority') or issue.priority or 'normal'
+        #issue.issue_type = self.cleaned_data.get('issue_type') or issue.issue_type or 'bug'
+        #issue.severity = self.cleaned_data.get('severity') or issue.severity or 'normal'
+        #issue.priority = self.cleaned_data.get('priority') or issue.priority or 'normal'
 
         preset = self.cleaned_data.get('due_date_preset')
         if preset:

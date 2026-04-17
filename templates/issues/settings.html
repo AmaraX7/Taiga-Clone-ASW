@@ -10,16 +10,6 @@
 
 <div class="settings-layout">
 
-    <!-- Barra lateral (per després) -->
-    <aside class="settings-sidebar">
-        <ul class="settings-nav">
-            <li class="settings-nav-item active">
-                <span class="settings-nav-icon">&#9679;</span>
-                Issue statuses
-            </li>
-        </ul>
-    </aside>
-
 
     <div class="settings-main">
         <div class="detail-card">
@@ -38,7 +28,7 @@
                     <thead>
                         <tr>
                             <th style="width:32px;"></th>
-                            <th>Colour</th>
+                            <th>Color</th>
                             <th>Name</th>
                             <th>Closed?</th>
                             <th>Actions</th>
@@ -93,10 +83,10 @@
                     <div class="settings-add-fields">
                         <div class="form-group" style="margin:0;flex:1;">
                             <label for="new-name">Name</label>
-                            <input type="text" id="new-name" name="name" placeholder="e.g. In review" required>
+                            <input type="text" id="new-name" name="name" placeholder="Status name" required>
                         </div>
                         <div class="form-group" style="margin:0;">
-                            <label for="new-color">Colour</label>
+                            <label for="new-color">Color</label>
                             <div class="color-input-wrapper">
                                 <input type="color" id="new-color-picker" value="#4c9aff"
                                     oninput="document.getElementById('new-color').value=this.value">
@@ -116,80 +106,212 @@
                 </form>
             </div>
 
-            <div class="settings-add-section">
-                <h3>Issue Types</h3>
-                <ul class="item-list" style="margin-bottom:12px;">
-                    {% for item in types %}
-                    <li class="item-row">
-                        <span>{{ item.name }} ({{ item.slug }})</span>
-                        <div>
-                            <a href="{% url 'catalog_edit' 'types' item.id %}" class="btn btn-secondary btn-sm">Edit</a>
-                            <form method="post" action="{% url 'catalog_delete' 'types' item.id %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                            </form>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
+
+
+
+
+
+	    <div class="settings-section-header">
+                <h2>Issue Types</h2>
+                <p class="settings-section-desc">
+                    Define the types an issue can be.
+                </p>
+            </div>
+		<!-- Types list -->
+            <table class="issues-table settings-table" id="status-table">
+                    <thead>
+                        <tr>
+                            <th>Color</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for type in types %}
+                        <tr class="status-row" data-id="{{ type.pk }}">
+                            <td>
+                                <span class="status-color-dot" style="background:{{ type.color }};"></span>
+                                <code class="color-code">{{ type.color }}</code>
+                            </td>
+                            <td>
+                                <span class="badge" style="background:{{ type.color }};color:#fff;">
+                                    {{ type.name }}
+                                </span>
+                            </td>
+                            <td class="settings-actions">
+                                <a href="{% url 'catalog_edit' 'types' type.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                                <form method="post" action="{% url 'catalog_delete' 'types' type.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Delete type &quot;{{ type.name }}&quot;?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                
+                <div class="settings-add-section">
+                <h3>Add new type</h3>
                 <form method="post" action="{% url 'catalog_create' 'types' %}" class="settings-add-form">
                     {% csrf_token %}
                     <div class="settings-add-fields">
-                        <input type="text" name="name" placeholder="Type name" required>
-                        <input type="text" name="color" value="#4c9aff" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
-                        <button type="submit" class="btn btn-new">Add type</button>
+                        <div class="form-group" style="margin:0;flex:1;">
+                            <label for="new-name">Name</label>
+                            <input type="text" id="new-name" name="name" placeholder="Type name" required>
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label for="new-color-type">Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="new-color-picker-type" value="#4c9aff"
+                                    oninput="document.getElementById('new-color-type').value=this.value">
+                                <input type="text" id="new-color-type" name="color" value="#4c9aff"
+                                    pattern="^#[0-9a-fA-F]{6}$" maxlength="7"
+                                    oninput="syncColorPicker('new-color-type','new-color-picker-type')">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-new" style="align-self:flex-end;">Add type</button>
                     </div>
                 </form>
             </div>
-
-            <div class="settings-add-section">
-                <h3>Severities</h3>
-                <ul class="item-list" style="margin-bottom:12px;">
-                    {% for item in severities %}
-                    <li class="item-row">
-                        <span>{{ item.name }} ({{ item.slug }})</span>
-                        <div>
-                            <a href="{% url 'catalog_edit' 'severities' item.id %}" class="btn btn-secondary btn-sm">Edit</a>
-                            <form method="post" action="{% url 'catalog_delete' 'severities' item.id %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                            </form>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
+                
+                
+                <div class="settings-section-header">
+                <h2>Severities</h2>
+                <p class="settings-section-desc">
+                    Define the severities an issue can have.
+                </p>
+            </div>
+		<!-- Severities list -->
+            <table class="issues-table settings-table" id="status-table">
+                    <thead>
+                        <tr>
+                            <th>Color</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for severity in severities %}
+                        <tr class="status-row" data-id="{{ severity.pk }}">
+                            <td>
+                                <span class="status-color-dot" style="background:{{ severity.color }};"></span>
+                                <code class="color-code">{{ severity.color }}</code>
+                            </td>
+                            <td>
+                                <span class="badge" style="background:{{ severity.color }};color:#fff;">
+                                    {{ severity.name }}
+                                </span>
+                            </td>
+                            <td class="settings-actions">
+                                <a href="{% url 'catalog_edit' 'severities' severity.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                                <form method="post" action="{% url 'catalog_delete' 'severities' severity.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Delete severity &quot;{{ severity.name }}&quot;?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <div class="settings-add-section">
+                <h3>Add new severity</h3>
                 <form method="post" action="{% url 'catalog_create' 'severities' %}" class="settings-add-form">
                     {% csrf_token %}
                     <div class="settings-add-fields">
-                        <input type="text" name="name" placeholder="Severity name" required>
-                        <input type="text" name="color" value="#6b7280" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
-                        <button type="submit" class="btn btn-new">Add severity</button>
+                        <div class="form-group" style="margin:0;flex:1;">
+                            <label for="new-name">Name</label>
+                            <input type="text" id="new-name" name="name" placeholder="Severity name" required>
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label for="new-color-sev">Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="new-color-picker-sev" value="#4c9aff"
+                                    oninput="document.getElementById('new-color-sev').value=this.value">
+                                <input type="text" id="new-color-sev" name="color" value="#4c9aff"
+                                    pattern="^#[0-9a-fA-F]{6}$" maxlength="7"
+                                    oninput="syncColorPicker('new-color-sev','new-color-picker-sev')">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-new" style="align-self:flex-end;">Add severity</button>
                     </div>
                 </form>
             </div>
 
-            <div class="settings-add-section">
-                <h3>Priorities</h3>
-                <ul class="item-list" style="margin-bottom:12px;">
-                    {% for item in priorities %}
-                    <li class="item-row">
-                        <span>{{ item.name }} ({{ item.slug }})</span>
-                        <div>
-                            <a href="{% url 'catalog_edit' 'priorities' item.id %}" class="btn btn-secondary btn-sm">Edit</a>
-                            <form method="post" action="{% url 'catalog_delete' 'priorities' item.id %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                            </form>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
+            
+            
+            
+                
+                
+                <div class="settings-section-header">
+                <h2>Priorities</h2>
+                <p class="settings-section-desc">
+                    Define the priorities an issue can have.
+                </p>
+            </div>
+		<!-- Priorities list -->
+            <table class="issues-table settings-table" id="status-table">
+                    <thead>
+                        <tr>
+                            <th>Color</th>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for priority in priorities %}
+                        <tr class="status-row" data-id="{{ priority.pk }}">
+                            <td>
+                                <span class="status-color-dot" style="background:{{ priority.color }};"></span>
+                                <code class="color-code">{{ priority.color }}</code>
+                            </td>
+                            <td>
+                                <span class="badge" style="background:{{ priority.color }};color:#fff;">
+                                    {{ priority.name }}
+                                </span>
+                            </td>
+                            <td class="settings-actions">
+                                <a href="{% url 'catalog_edit' 'priorities' priority.id %}" class="btn btn-secondary btn-sm">Edit</a>
+                                <form method="post" action="{% url 'catalog_delete' 'priorities' priority.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('Delete priority &quot;{{ priority.name }}&quot;?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <div class="settings-add-section">
+                <h3>Add new priority</h3>
                 <form method="post" action="{% url 'catalog_create' 'priorities' %}" class="settings-add-form">
                     {% csrf_token %}
                     <div class="settings-add-fields">
-                        <input type="text" name="name" placeholder="Priority name" required>
-                        <input type="text" name="color" value="#22c55e" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
-                        <button type="submit" class="btn btn-new">Add priority</button>
+                        <div class="form-group" style="margin:0;flex:1;">
+                            <label for="new-name">Name</label>
+                            <input type="text" id="new-name" name="name" placeholder="Priority name" required>
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label for="new-color-prio">Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="new-color-picker-prio" value="#4c9aff"
+                                    oninput="document.getElementById('new-color-prio').value=this.value">
+                                <input type="text" id="new-color-prio" name="color" value="#4c9aff"
+                                    pattern="^#[0-9a-fA-F]{6}$" maxlength="7"
+                                    oninput="syncColorPicker('new-color-prio','new-color-picker-prio')">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-new" style="align-self:flex-end;">Add priority</button>
                     </div>
                 </form>
             </div>
@@ -214,7 +336,7 @@
                     {% csrf_token %}
                     <div class="settings-add-fields">
                         <input type="text" name="name" placeholder="Tag name" required>
-                        <input type="text" name="color" value="#70728f" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <!input type="text" name="color" value="#70728f" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
                         <button type="submit" class="btn btn-new">Add tag</button>
                     </div>
                 </form>
@@ -253,41 +375,12 @@
 
 <style>
 .settings-layout {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 24px;
     margin-top: 24px;
 }
 
-.settings-sidebar {
-    background: #fff;
-    border: 1px solid #e5e9f0;
-    border-radius: 8px;
-    padding: 12px 0;
-    align-self: start;
-}
-
-.settings-nav { list-style: none; margin: 0; padding: 0; }
-.settings-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    font-size: 14px;
-    color: #70728f;
-    cursor: pointer;
-    border-radius: 4px;
-}
-.settings-nav-item.active {
-    background: #eceff4;
-    color: #2e3440;
-    font-weight: 600;
-}
-.settings-nav-icon { font-size: 10px; }
-
 .settings-main .detail-card { padding: 24px; }
 
-.settings-section-header { margin-bottom: 20px; }
+.settings-section-header { margin-bottom: 20px; margin-top: 20px}
 .settings-section-header h2 { margin: 0 0 6px; }
 .settings-section-desc { color: #70728f; font-size: 14px; margin: 0; }
 

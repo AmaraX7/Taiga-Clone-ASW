@@ -167,6 +167,13 @@ def issue_bulk_insert(request):
             issues_text = form.cleaned_data['issues_text']
             selected_status = form.cleaned_data['status']
             default_status = selected_status or IssueStatus.objects.order_by('order', 'name').first()
+            default_issue_type = IssueType.objects.order_by('order', 'name').first()
+            default_severity = IssueSeverity.objects.order_by('order', 'name').first()
+            default_priority = IssuePriority.objects.order_by('order', 'name').first()
+
+            if not (default_status and default_issue_type and default_severity and default_priority):
+                messages.error(request, 'Cannot create issues: configure status/type/severity/priority in settings first.')
+                return redirect('settings_view')
 
             created_count = 0
             for raw_line in issues_text.splitlines():
@@ -186,6 +193,9 @@ def issue_bulk_insert(request):
                     subject=subject,
                     description=description,
                     status=default_status,
+                    issue_type=default_issue_type,
+                    severity=default_severity,
+                    priority=default_priority,
                     created_by=request.user,
                 )
                 _add_activity(issue, request.user, 'created issue (bulk)', issue.subject)
@@ -368,16 +378,21 @@ def comment_delete(request, comment_id):
 @login_required
 def settings_view(request):
     """Main settings page — lists all configurable issue catalogs."""
-    for item in IssueStatus.get_default_statuses():
-        IssueStatus.objects.get_or_create(slug=item['slug'], defaults=item)
-    for item in IssueType.get_defaults():
-        IssueType.objects.get_or_create(slug=item['slug'], defaults=item)
-    for item in IssueSeverity.get_defaults():
-        IssueSeverity.objects.get_or_create(slug=item['slug'], defaults=item)
-    for item in IssuePriority.get_defaults():
-        IssuePriority.objects.get_or_create(slug=item['slug'], defaults=item)
-    for item in DueDatePreset.get_defaults():
-        DueDatePreset.objects.get_or_create(name=item['name'], defaults=item)
+    if not IssueStatus.objects.exists():
+        for item in IssueStatus.get_default_statuses():
+            IssueStatus.objects.get_or_create(slug=item['slug'], defaults=item)
+    if not IssueType.objects.exists():
+        for item in IssueType.get_defaults():
+            IssueType.objects.get_or_create(slug=item['slug'], defaults=item)
+    if not IssueSeverity.objects.exists():
+        for item in IssueSeverity.get_defaults():
+            IssueSeverity.objects.get_or_create(slug=item['slug'], defaults=item)
+    if not IssuePriority.objects.exists():
+        for item in IssuePriority.get_defaults():
+            IssuePriority.objects.get_or_create(slug=item['slug'], defaults=item)
+    if not DueDatePreset.objects.exists():
+        for item in DueDatePreset.get_defaults():
+            DueDatePreset.objects.get_or_create(name=item['name'], defaults=item)
 
     context = {
         'statuses': IssueStatus.objects.all(),

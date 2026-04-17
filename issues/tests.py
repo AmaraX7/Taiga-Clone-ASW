@@ -3,7 +3,16 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Attachment, Comment, Issue, IssueActivity, IssueStatus
+from .models import (
+	Attachment,
+	Comment,
+	Issue,
+	IssueActivity,
+	IssuePriority,
+	IssueSeverity,
+	IssueStatus,
+	IssueType,
+)
 
 
 class IssueFeatureTests(TestCase):
@@ -21,12 +30,39 @@ class IssueFeatureTests(TestCase):
 				'order': 0,
 			},
 		)
+		self.issue_type, _ = IssueType.objects.get_or_create(
+			slug='bug',
+			defaults={
+				'name': 'Bug',
+				'color': '#e44057',
+				'order': 0,
+			},
+		)
+		self.severity, _ = IssueSeverity.objects.get_or_create(
+			slug='normal',
+			defaults={
+				'name': 'Normal',
+				'color': '#16a34a',
+				'order': 2,
+			},
+		)
+		self.priority, _ = IssuePriority.objects.get_or_create(
+			slug='normal',
+			defaults={
+				'name': 'Normal',
+				'color': '#22c55e',
+				'order': 1,
+			},
+		)
 		self.issue = Issue.objects.create(
 			subject='Sample issue',
 			description='Sample description',
 			created_by=self.creator,
 			assigned_to=self.creator,
 			status=self.status,
+			issue_type=self.issue_type,
+			severity=self.severity,
+			priority=self.priority,
 		)
 
 	def test_assign_issue(self):
@@ -80,6 +116,9 @@ class IssueFeatureTests(TestCase):
 				'description': 'Issue body',
 				'assigned_to': self.assignee.id,
 				'status': self.status.id,
+				'issue_type': self.issue_type.id,
+				'severity': self.severity.id,
+				'priority': self.priority.id,
 			},
 		)
 
@@ -197,6 +236,9 @@ class IssueFeatureTests(TestCase):
 				'description': 'Hacked description',
 				'status': self.status.id,
 				'assigned_to': self.assignee.id,
+				'issue_type': self.issue_type.id,
+				'severity': self.severity.id,
+				'priority': self.priority.id,
 			},
 		)
 
@@ -212,6 +254,9 @@ class IssueFeatureTests(TestCase):
 				'description': 'Edited description',
 				'status': self.status.id,
 				'assigned_to': self.assignee.id,
+				'issue_type': self.issue_type.id,
+				'severity': self.severity.id,
+				'priority': self.priority.id,
 			},
 		)
 
