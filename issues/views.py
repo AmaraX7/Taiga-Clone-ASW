@@ -167,6 +167,13 @@ def issue_bulk_insert(request):
             issues_text = form.cleaned_data['issues_text']
             selected_status = form.cleaned_data['status']
             default_status = selected_status or IssueStatus.objects.order_by('order', 'name').first()
+            default_issue_type = IssueType.objects.order_by('order', 'name').first()
+            default_severity = IssueSeverity.objects.order_by('order', 'name').first()
+            default_priority = IssuePriority.objects.order_by('order', 'name').first()
+
+            if not (default_status and default_issue_type and default_severity and default_priority):
+                messages.error(request, 'Cannot create issues: configure status/type/severity/priority in settings first.')
+                return redirect('settings_view')
 
             created_count = 0
             for raw_line in issues_text.splitlines():
@@ -186,6 +193,9 @@ def issue_bulk_insert(request):
                     subject=subject,
                     description=description,
                     status=default_status,
+                    issue_type=default_issue_type,
+                    severity=default_severity,
+                    priority=default_priority,
                     created_by=request.user,
                 )
                 _add_activity(issue, request.user, 'created issue (bulk)', issue.subject)
