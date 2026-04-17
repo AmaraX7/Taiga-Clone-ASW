@@ -67,8 +67,17 @@
             <ul class="item-list" style="margin-top: 8px;">
                 {% for attachment in issue.attachments.all %}
                 <li class="item-row">
-                    <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">{{ attachment.file.name }}</a>
-                    <span class="comment-meta">by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
+                    <div class="attachment-content">
+                        {% with attachment.file.name|lower as filename_lower %}
+                            {% if '.png' in filename_lower or '.jpg' in filename_lower or '.jpeg' in filename_lower or '.gif' in filename_lower or '.webp' in filename_lower %}
+                                <a href="{{ attachment.file.url }}" target="_blank" rel="noopener" class="attachment-thumb-link">
+                                    <img src="{{ attachment.file.url }}" alt="Attachment preview" class="attachment-thumb">
+                                </a>
+                            {% endif %}
+                        {% endwith %}
+                        <a href="{{ attachment.file.url }}" target="_blank" rel="noopener" class="attachment-link">{{ attachment.file.name|cut:"issues/attachments/" }}</a>
+                        <span class="comment-meta">by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
                     {% if request.user == attachment.uploaded_by %}
                     <form method="post" action="{% url 'attachment_delete' issue.id attachment.id %}">
                         {% csrf_token %}
@@ -393,6 +402,38 @@
 
     .attachment-upload-form input[type="file"] {
         font-size: 0.8rem;
+    }
+
+    .attachment-content {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .attachment-link {
+        color: #008aa8;
+        text-decoration: none;
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .attachment-link:hover {
+        text-decoration: underline;
+    }
+
+    .attachment-thumb-link {
+        display: inline-flex;
+        width: fit-content;
+    }
+
+    .attachment-thumb {
+        width: 140px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        background: #f8fafc;
     }
 
     .issue-comments-tabs {

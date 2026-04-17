@@ -100,9 +100,9 @@
             <tbody>
                 {% for issue in issues %}
                 <tr>
-                    <td><span class="badge" style="background:{{ issue.issue_type.color }}; color: #fff">{{ issue.issue_type.name }}</span></td>
-                    <td><span class="badge" style="background:{{ issue.severity.color }}; color: #fff">{{ issue.severity.name }}</span></td>
-                    <td><span class="badge" style="background:{{ issue.priority.color }}; color: #fff">{{ issue.priority.name }}</span></td>
+                    <td><span class="badge js-color-badge" data-badge-color="{{ issue.issue_type.color }}">{{ issue.issue_type.name }}</span></td>
+                    <td><span class="badge js-color-badge" data-badge-color="{{ issue.severity.color }}">{{ issue.severity.name }}</span></td>
+                    <td><span class="badge js-color-badge" data-badge-color="{{ issue.priority.color }}">{{ issue.priority.name }}</span></td>
                     <td>
                         <a class="issue-link" href="{% url 'issue_detail' issue.id %}">{{ issue.subject }}</a>
                         {% if issue.deadline %}
@@ -115,7 +115,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <span class="badge" style="background:{{ issue.status.color }}; color: #fff">{{ issue.status.name }}</span>
+                        <span class="badge js-color-badge" data-badge-color="{{ issue.status.color }}">{{ issue.status.name }}</span>
                     </td>
                     <td>{{ issue.modified_at|date:"d M Y" }}</td>
                     <td>{{ issue.assigned_to|default:"-" }}</td>
@@ -143,4 +143,14 @@
     .list-deadline-icon.status-orange { color: #f39200; }
     .list-deadline-icon.status-green { color: #9bc300; }
 </style>
+
+<script>
+    document.querySelectorAll('.js-color-badge').forEach(function (el) {
+        var color = el.dataset.badgeColor;
+        if (color) {
+            el.style.backgroundColor = color;
+            el.style.color = '#fff';
+        }
+    });
+</script>
 {% endblock %}
