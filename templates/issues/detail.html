@@ -66,9 +66,17 @@
             {% if issue.attachments.all %}
             <ul class="item-list" style="margin-top: 8px;">
                 {% for attachment in issue.attachments.all %}
-                <li class="item-row">
-                    <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">{{ attachment.file.name }}</a>
-                    <span class="comment-meta">by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
+                <li class="item-row attachment-row">
+                    <a class="attachment-preview" href="{{ attachment.file.url }}" target="_blank" rel="noopener" title="Open attachment">
+                        <img src="{{ attachment.file.url }}" alt="Attachment preview" loading="lazy"
+                            onerror="this.parentElement.style.display='none'">
+                    </a>
+                    <div class="attachment-content">
+                        <a class="attachment-link" href="{{ attachment.file.url }}" target="_blank" rel="noopener">
+                            {{ attachment.file.name|cut:"issues/attachments/" }}
+                        </a>
+                        <span class="comment-meta attachment-meta">by {{ attachment.uploaded_by }} on {{ attachment.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
                     {% if request.user == attachment.uploaded_by %}
                     <form method="post" action="{% url 'attachment_delete' issue.id attachment.id %}">
                         {% csrf_token %}
@@ -78,6 +86,8 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% else %}
+            <p class="empty-state" style="margin-top: 8px;">No attachments yet.</p>
             {% endif %}
         </div>
 
@@ -198,10 +208,9 @@
             {% if watcher_list %}
             <ul class="sidebar-watcher-list">
                 {% for w in watcher_list %}
-                <li>
+                <li class="sidebar-watcher-item">
                     <span class="sidebar-avatar">{{ w.user.username|slice:":1"|upper }}</span>
-                    <a class="watcher-username" href="{% url 'profile_view' w.user.username %}">{{ w.user.username
-                        }}</a>
+                    <a class="watcher-username" href="{% url 'profile_view' w.user.username %}">{{ w.user.username }}</a>
                     <form method="post" action="{% url 'watcher_remove' issue.id w.user.id %}"
                         class="sidebar-watcher-remove-form">
                         {% csrf_token %}
@@ -210,6 +219,8 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% else %}
+            <p class="empty-state">No watchers yet.</p>
             {% endif %}
             <form method="post" action="{% url 'watcher_add' issue.id %}" class="sidebar-assign-form">
                 {% csrf_token %}
@@ -588,19 +599,46 @@
     }
 
     .sidebar-watcher-list {
+        list-style: none;
         padding: 0;
         margin: 0 0 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
     }
 
-    .sidebar-watcher-list li {
+    .sidebar-watcher-item {
         display: flex;
         align-items: center;
         gap: 6px;
-        list-style: none;
         background: #eceff4;
         border-radius: 14px;
         padding: 3px 6px 3px 4px;
-        margin-bottom: 4px;
+    }
+
+    .sidebar-watcher-remove-form {
+        margin-left: auto;
+    }
+
+    .btn-watcher-remove {
+        background: transparent;
+        border: none;
+        color: #9b9fb0;
+        font-size: 1rem;
+        cursor: pointer;
+        line-height: 1;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-watcher-remove:hover {
+        background: #f6dce1;
+        color: #e44057;
     }
 
     .watcher-username {
@@ -646,6 +684,51 @@
 
     .sidebar-watch-actions {
         margin-top: 4px;
+    }
+
+    .attachment-row {
+        align-items: flex-start;
+    }
+
+    .attachment-preview {
+        width: 72px;
+        height: 72px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        background: #f8fafc;
+        flex-shrink: 0;
+        display: block;
+    }
+
+    .attachment-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .attachment-content {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .attachment-link {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+        overflow-wrap: anywhere;
+    }
+
+    .attachment-link:hover {
+        text-decoration: underline;
+    }
+
+    .attachment-meta {
+        font-size: 0.78rem;
     }
 
     .sidebar-actions-row {
