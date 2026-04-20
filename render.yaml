@@ -15,25 +15,20 @@ services:
       - key: STORAGE_BACKEND
         value: "s3"
       - key: DB_NAME
-        fromDatabase:
-          name: projecte-asw-db
-          property: database
+        value: ""
+        sync: false
       - key: DB_USER
-        fromDatabase:
-          name: projecte-asw-db
-          property: user
+        value: ""
+        sync: false
       - key: DB_PASSWORD
-        fromDatabase:
-          name: projecte-asw-db
-          property: password
+        value: ""
+        sync: false
       - key: DB_HOST
-        fromDatabase:
-          name: projecte-asw-db
-          property: host
+        value: ""
+        sync: false
       - key: DB_PORT
-        fromDatabase:
-          name: projecte-asw-db
-          property: port
+        value: "5432"
+        sync: false
       - key: DJANGO_SUPERUSER_USERNAME
         value: ""
         sync: false
@@ -63,6 +58,3 @@ services:
         value: "us-east-1"
         sync: false
 
-databases:
-  - name: projecte-asw-db
-    plan: free
