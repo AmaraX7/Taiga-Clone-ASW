@@ -9,5 +9,5 @@
 
 ## Enllaços del projecte
 - Taiga: https://tree.taiga.io/project/victorr-cm-asw/timeline
-- Aplicació desplegada: https://projecte-asw-web.onrender.com
+- Aplicació desplegada: [https://projecte-asw-web.onrender.com](https://projecte-asw1.onrender.com)
 
