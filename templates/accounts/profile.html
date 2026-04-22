@@ -34,6 +34,11 @@
 
         {% if is_own %}
         <a href="{% url 'profile_edit' profile_user.username %}" class="btn btn-new profile-edit-btn">Edit Bio</a>
+
+        <div class="api-key-section">
+            <p class="api-key-label">API Key</p>
+            <input type="text" class="api-key-input" value="{{ profile.api_key }}" readonly>
+        </div>
         {% endif %}
 
         <div class="profile-stats">
