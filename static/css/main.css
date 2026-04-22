@@ -1329,3 +1329,38 @@ body {
     pointer-events: none;
     cursor: default;
 }
+
+/* API Key section (profile sidebar) */
+.api-key-section {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.api-key-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4c566a;
+    margin: 0 0 0.3rem 0;
+}
+
+.api-key-input {
+    width: 100%;
+    font-family: monospace;
+    font-size: 0.65rem;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid #d8dee9;
+    border-radius: 4px;
+    background: #eceff4;
+    color: #2e3440;
+    cursor: text;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.api-key-input:focus {
+    outline: 2px solid #5e81ac;
+    outline-offset: 1px;
+}
