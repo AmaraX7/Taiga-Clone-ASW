@@ -1,0 +1,102 @@
+openapi: 3.0.2
+info:
+  version: 1.0.0
+  title: Issue Tracker API
+  description: >
+    REST API for the **Issue Tracker** (Taiga clone) built for the ASW course at UPC.
+    The web application is available at https://projecte-asw1.onrender.com.
+
+
+    **Authentication**: All endpoints require an API key in the `Authorization` header.
+    Find your key on your profile page in the web application.
+
+servers:
+  - url: 'https://projecte-asw1.onrender.com/api'
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /:
+    get:
+      tags: [health]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        200:
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user:
+                    type: string
+                    example: john
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >
+        Your personal API key. Find it on your profile page in the web application.
+        Send the raw 64-character hex value — no prefix required.
+
+  responses:
+    Unauthorized:
+      description: 'Error: Unauthorized — API key missing or invalid'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResult'
+          examples:
+            error401:
+              value:
+                message: 'Invalid API key.'
+    Forbidden:
+      description: 'Error: Forbidden — you do not have permission for this action'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResult'
+          examples:
+            error403:
+              value:
+                message: 'You do not have permission to perform this action.'
+    NotFound:
+      description: 'Error: Not Found'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResult'
+          examples:
+            error404:
+              value:
+                message: "No resource with the given id found."
+    BadRequest:
+      description: 'Error: Bad Request'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResult'
+          examples:
+            error400:
+              value:
+                message: 'subject: This field is required.'
+
+  schemas:
+    ErrorResult:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: 'Invalid API key.'
