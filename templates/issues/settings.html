@@ -95,14 +95,20 @@
                             <label for="new-name">Name</label>
                             <input type="text" id="new-name" name="name" placeholder="e.g. In review" required>
                         </div>
-                        <div class="form-group" style="margin:0;">
-                            <label for="new-color">Colour</label>
-                            <div class="color-input-wrapper">
-                                <input type="color" id="new-color-picker" value="#4c9aff"
-                                    oninput="document.getElementById('new-color').value=this.value">
-                                <input type="text" id="new-color" name="color" value="#4c9aff"
-                                    pattern="^#[0-9a-fA-F]{6}$" maxlength="7"
-                                    oninput="syncColorPicker('new-color','new-color-picker')">
+                        <div class="form-group taiga-color-group" style="margin:0;">
+                            <label>Colour</label>
+                            <div class="taiga-color-picker">
+                                <input type="hidden" id="new-color" name="color" value="#4c9aff">
+                                <input type="color" id="new-color-picker" class="taiga-color-native" value="#4c9aff" data-hidden-target="new-color">
+                                <div class="taiga-color-swatches">
+                                    <button type="button" class="taiga-color-swatch" data-hidden-target="new-color" data-color="#4c9aff" style="background:#4c9aff;"></button>
+                                    <button type="button" class="taiga-color-swatch" data-hidden-target="new-color" data-color="#83eede" style="background:#83eede;"></button>
+                                    <button type="button" class="taiga-color-swatch" data-hidden-target="new-color" data-color="#e2b93b" style="background:#e2b93b;"></button>
+                                    <button type="button" class="taiga-color-swatch" data-hidden-target="new-color" data-color="#f5a623" style="background:#f5a623;"></button>
+                                    <button type="button" class="taiga-color-swatch" data-hidden-target="new-color" data-color="#e44057" style="background:#e44057;"></button>
+                                    <button type="button" class="taiga-color-swatch" data-hidden-target="new-color" data-color="#70728f" style="background:#70728f;"></button>
+                                </div>
+                                <code class="taiga-color-code" data-code-target="new-color">#4c9aff</code>
                             </div>
                         </div>
                         <div class="form-group" style="margin:0;justify-content:flex-end;">
@@ -136,7 +142,17 @@
                     {% csrf_token %}
                     <div class="settings-add-fields">
                         <input type="text" name="name" placeholder="Type name" required>
-                        <input type="text" name="color" value="#4c9aff" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <div class="taiga-color-picker">
+                            <input type="hidden" id="type-color" name="color" value="#4c9aff">
+                            <input type="color" class="taiga-color-native" value="#4c9aff" data-hidden-target="type-color">
+                            <div class="taiga-color-swatches">
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="type-color" data-color="#4c9aff" style="background:#4c9aff;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="type-color" data-color="#8b5cf6" style="background:#8b5cf6;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="type-color" data-color="#0891b2" style="background:#0891b2;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="type-color" data-color="#e44057" style="background:#e44057;"></button>
+                            </div>
+                            <code class="taiga-color-code" data-code-target="type-color">#4c9aff</code>
+                        </div>
                         <button type="submit" class="btn btn-new">Add type</button>
                     </div>
                 </form>
@@ -162,7 +178,18 @@
                     {% csrf_token %}
                     <div class="settings-add-fields">
                         <input type="text" name="name" placeholder="Severity name" required>
-                        <input type="text" name="color" value="#6b7280" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <div class="taiga-color-picker">
+                            <input type="hidden" id="severity-color" name="color" value="#6b7280">
+                            <input type="color" class="taiga-color-native" value="#6b7280" data-hidden-target="severity-color">
+                            <div class="taiga-color-swatches">
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="severity-color" data-color="#6b7280" style="background:#6b7280;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="severity-color" data-color="#ca8a04" style="background:#ca8a04;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="severity-color" data-color="#16a34a" style="background:#16a34a;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="severity-color" data-color="#ea580c" style="background:#ea580c;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="severity-color" data-color="#b91c1c" style="background:#b91c1c;"></button>
+                            </div>
+                            <code class="taiga-color-code" data-code-target="severity-color">#6b7280</code>
+                        </div>
                         <button type="submit" class="btn btn-new">Add severity</button>
                     </div>
                 </form>
@@ -188,7 +215,17 @@
                     {% csrf_token %}
                     <div class="settings-add-fields">
                         <input type="text" name="name" placeholder="Priority name" required>
-                        <input type="text" name="color" value="#22c55e" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <div class="taiga-color-picker">
+                            <input type="hidden" id="priority-color" name="color" value="#22c55e">
+                            <input type="color" class="taiga-color-native" value="#22c55e" data-hidden-target="priority-color">
+                            <div class="taiga-color-swatches">
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="priority-color" data-color="#eab308" style="background:#eab308;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="priority-color" data-color="#22c55e" style="background:#22c55e;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="priority-color" data-color="#ef4444" style="background:#ef4444;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="priority-color" data-color="#a0a4b8" style="background:#a0a4b8;"></button>
+                            </div>
+                            <code class="taiga-color-code" data-code-target="priority-color">#22c55e</code>
+                        </div>
                         <button type="submit" class="btn btn-new">Add priority</button>
                     </div>
                 </form>
@@ -214,7 +251,17 @@
                     {% csrf_token %}
                     <div class="settings-add-fields">
                         <input type="text" name="name" placeholder="Tag name" required>
-                        <input type="text" name="color" value="#70728f" pattern="^#[0-9a-fA-F]{6}$" maxlength="7">
+                        <div class="taiga-color-picker">
+                            <input type="hidden" id="tag-color" name="color" value="#70728f">
+                            <input type="color" class="taiga-color-native" value="#70728f" data-hidden-target="tag-color">
+                            <div class="taiga-color-swatches">
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="tag-color" data-color="#70728f" style="background:#70728f;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="tag-color" data-color="#4c9aff" style="background:#4c9aff;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="tag-color" data-color="#008aa8" style="background:#008aa8;"></button>
+                                <button type="button" class="taiga-color-swatch" data-hidden-target="tag-color" data-color="#e44057" style="background:#e44057;"></button>
+                            </div>
+                            <code class="taiga-color-code" data-code-target="tag-color">#70728f</code>
+                        </div>
                         <button type="submit" class="btn btn-new">Add tag</button>
                     </div>
                 </form>
@@ -344,22 +391,46 @@
 }
 .settings-add-fields .form-group { margin-bottom: 0; }
 
-.color-input-wrapper {
+.taiga-color-picker {
     display: flex;
     align-items: center;
-    gap: 6px;
-}
-.color-input-wrapper input[type="color"] {
-    width: 36px;
-    height: 36px;
-    padding: 2px;
+    gap: 8px;
+    padding: 4px 8px;
     border: 1px solid #d8dee9;
-    border-radius: 6px;
-    cursor: pointer;
-    background: none;
+    border-radius: 8px;
+    background: #f8fafc;
+    min-width: 190px;
 }
-.color-input-wrapper input[type="text"] {
-    width: 90px;
+
+.taiga-color-native {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.taiga-color-swatches {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.taiga-color-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    cursor: pointer;
+    padding: 0;
+}
+
+.taiga-color-code {
+    margin-left: auto;
+    font-size: 11px;
+    color: #70728f;
 }
 
 .checkbox-label {
@@ -373,13 +444,36 @@
 </style>
 
 <script>
-// Sincronitzar l'hexadecimal amb el color picker
-function syncColorPicker(textId, pickerId) {
-    const val = document.getElementById(textId).value;
-    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-        document.getElementById(pickerId).value = val;
+function updateTaigaColor(targetId, value) {
+    const hidden = document.getElementById(targetId);
+    if (!hidden) {
+        return;
     }
+    hidden.value = value;
+    document.querySelectorAll(`[data-hidden-target=\"${targetId}\"]`).forEach((el) => {
+        if (el.matches('input[type=\"color\"]')) {
+            el.value = value;
+        }
+    });
+    document.querySelectorAll(`[data-code-target=\"${targetId}\"]`).forEach((el) => {
+        el.textContent = value;
+    });
 }
+
+document.querySelectorAll('.taiga-color-native').forEach((picker) => {
+    picker.addEventListener('input', (event) => {
+        updateTaigaColor(event.currentTarget.dataset.hiddenTarget, event.currentTarget.value);
+    });
+});
+
+document.querySelectorAll('.taiga-color-swatch').forEach((swatch) => {
+    swatch.addEventListener('click', (event) => {
+        updateTaigaColor(
+            event.currentTarget.dataset.hiddenTarget,
+            event.currentTarget.dataset.color,
+        );
+    });
+});
 
 // Drag-and-drop reorder
 (function () {

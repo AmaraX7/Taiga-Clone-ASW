@@ -4,21 +4,15 @@
 
 {% block content %}
 <div class="issues-header">
-    <h1>
-        Edit Issue #{{ issue.id }}
-
-    </h1>
+    <h1>#{{ issue.id }} {{ issue.subject }}</h1>
+    <a href="{% url 'issue_detail' issue.id %}" class="btn btn-cancel">Back to detail</a>
 </div>
 
-
-<form method="post" id="edit-issue-form">
+<form method="post" enctype="multipart/form-data" id="edit-issue-form">
     {% csrf_token %}
 
     <div class="issue-detail-layout">
-
-        <!-- COLUMNA ESQUERRA: camps principals -->
-        <div class="issue-detail-main">
-
+        <div class="issue-detail-main detail-card" style="padding: 0 20px 20px;">
             <div class="issue-detail-meta-bar">
                 <span class="issue-detail-label">ISSUE</span>
                 <span class="issue-detail-created">
@@ -27,7 +21,6 @@
                 </span>
             </div>
 
-            <!-- Subject -->
             <div class="edit-field-block">
                 <label class="edit-field-label" for="{{ form.subject.id_for_label }}">Subject</label>
                 {{ form.subject }}
@@ -38,7 +31,6 @@
                 {% endif %}
             </div>
 
-            <!-- Description -->
             <div class="edit-field-block">
                 <label class="edit-field-label" for="{{ form.description.id_for_label }}">Description</label>
                 {{ form.description }}
@@ -49,271 +41,374 @@
                 {% endif %}
             </div>
 
-            <!-- Tags -->
             <div class="edit-field-block">
                 <label class="edit-field-label" for="{{ form.tags.id_for_label }}">Tags</label>
                 {{ form.tags }}
+                {% if form.tags.errors %}
+                <ul class="field-errors">
+                    {% for error in form.tags.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+
+            <div class="edit-field-block">
+                <label class="edit-field-label" for="{{ form.attachments.id_for_label }}">{{ form.attachments.label }}</label>
+                {{ form.attachments }}
+                <span class="field-help">New files will be added without replacing existing attachments.</span>
+                {% if form.attachments.errors %}
+                <ul class="field-errors">
+                    {% for error in form.attachments.errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+                {% endif %}
             </div>
 
             <div class="edit-form-actions">
                 <button type="submit" class="btn btn-new">Save changes</button>
                 <a href="{% url 'issue_detail' issue.pk %}" class="btn btn-cancel">Cancel</a>
             </div>
-
         </div>
 
-        <!-- COLUMNA DRETA: sidebar amb metadades editables -->
         <aside class="issue-detail-sidebar">
-
-            <!-- Status -->
             <div class="edit-sidebar-header">
                 <span class="sidebar-section-title" style="margin-bottom:0;">Status</span>
             </div>
             <div class="sidebar-select-field-wrap">
-                {{ form.status }}
+                <div class="attribute-select-row">
+                    <span class="attribute-color-dot" id="dot-status"></span>
+                    <select name="status" id="{{ form.status.id_for_label }}" data-color-target="dot-status" class="attribute-select compact-select">
+                        {% for status in status_options %}
+                        <option value="{{ status.id }}" data-color="{{ status.color }}"
+                            {% if form.status.value|stringformat:"s" == status.id|stringformat:"s" %}selected{% endif %}>
+                            {{ status.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
-            <!-- Type -->
             <div class="sidebar-select-field-wrap">
                 <span class="sidebar-label">type</span>
-                {{ form.issue_type }}
+                <div class="attribute-select-row">
+                    <span class="attribute-color-dot" id="dot-type"></span>
+                    <select name="issue_type" id="{{ form.issue_type.id_for_label }}" data-color-target="dot-type" class="attribute-select compact-select">
+                        {% for item in issue_type_options %}
+                        <option value="{{ item.slug }}" data-color="{{ item.color }}"
+                            {% if form.issue_type.value == item.slug %}selected{% endif %}>
+                            {{ item.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
-            <!-- Severity -->
             <div class="sidebar-select-field-wrap">
                 <span class="sidebar-label">severity</span>
-                {{ form.severity }}
+                <div class="attribute-select-row">
+                    <span class="attribute-color-dot" id="dot-severity"></span>
+                    <select name="severity" id="{{ form.severity.id_for_label }}" data-color-target="dot-severity" class="attribute-select compact-select">
+                        {% for item in severity_options %}
+                        <option value="{{ item.slug }}" data-color="{{ item.color }}"
+                            {% if form.severity.value == item.slug %}selected{% endif %}>
+                            {{ item.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
-            <!-- Priority -->
             <div class="sidebar-select-field-wrap">
                 <span class="sidebar-label">priority</span>
-                {{ form.priority }}
+                <div class="attribute-select-row">
+                    <span class="attribute-color-dot" id="dot-priority"></span>
+                    <select name="priority" id="{{ form.priority.id_for_label }}" data-color-target="dot-priority" class="attribute-select compact-select">
+                        {% for item in priority_options %}
+                        <option value="{{ item.slug }}" data-color="{{ item.color }}"
+                            {% if form.priority.value == item.slug %}selected{% endif %}>
+                            {{ item.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
             <hr class="sidebar-divider">
 
-            <!-- Assigned to -->
             <div class="sidebar-section">
                 <span class="sidebar-section-title">ASSIGNED TO</span>
                 {{ form.assigned_to }}
+                {% if form.assigned_to.errors %}
+                <ul class="field-errors">{% for e in form.assigned_to.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
             </div>
 
             <hr class="sidebar-divider">
 
-            <!-- Deadline -->
             <div class="sidebar-section">
                 <span class="sidebar-section-title">DEADLINE</span>
                 {{ form.deadline }}
                 {% if form.deadline.errors %}
                 <ul class="field-errors">{% for e in form.deadline.errors %}<li>{{ e }}</li>{% endfor %}</ul>
                 {% endif %}
+
+                <div class="deadline-shortcuts">
+                    {% for preset in due_date_presets %}
+                    <button type="button" class="deadline-preset-btn" data-days="{{ preset.days_from_today }}">{{ preset.name }}</button>
+                    {% endfor %}
+                </div>
+
+                <label for="{{ form.due_date_preset.id_for_label }}" class="sidebar-label" style="margin-top:8px;display:block;">Preset</label>
+                {{ form.due_date_preset }}
             </div>
 
+            <hr class="sidebar-divider">
+
+            <div class="sidebar-section" style="display:flex; gap:8px; align-items:center;">
+                <button type="submit" class="btn btn-new" style="flex:1;">Save</button>
+                <a href="{% url 'issue_detail' issue.pk %}" class="btn btn-cancel" style="flex:1; margin-left:0; text-align:center;">Cancel</a>
+            </div>
         </aside>
     </div>
 </form>
 
 <style>
-    /* ── Layout (igual que el detail) ── */
+.issue-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+    margin-top: 16px;
+}
+
+.issue-detail-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.issue-detail-meta-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0 12px;
+    border-bottom: 1px solid #e8e8e8;
+    margin-bottom: 4px;
+}
+
+.issue-detail-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: #9b9fb0;
+    text-transform: uppercase;
+}
+
+.issue-detail-created {
+    font-size: 0.83rem;
+    color: #6b7280;
+}
+
+.edit-field-block {
+    padding: 16px 0;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.edit-field-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.edit-field-block input[type="text"],
+.edit-field-block textarea {
+    width: 100%;
+    border: 1px solid #d8dee9;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    resize: vertical;
+    box-sizing: border-box;
+    color: #374151;
+}
+
+.edit-field-block input[type="text"]:focus,
+.edit-field-block textarea:focus {
+    border-color: #008aa8;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 138, 168, 0.15);
+}
+
+.edit-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.field-errors {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0;
+    color: #de3b53;
+    font-size: 0.82rem;
+}
+
+.issue-detail-sidebar {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 0;
+    overflow: visible;
+}
+
+.edit-sidebar-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid #e8e8e8;
+    border-radius: 8px 8px 0 0;
+}
+
+.sidebar-select-field-wrap {
+    padding: 8px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sidebar-label {
+    color: #9b9fb0;
+    font-size: 0.82rem;
+    text-transform: lowercase;
+}
+
+.sidebar-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: #9b9fb0;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.sidebar-divider {
+    margin: 0;
+    border: none;
+    border-top: 1px solid #e8e8e8;
+}
+
+.sidebar-section {
+    padding: 12px 16px;
+}
+
+.sidebar-section select,
+.sidebar-section input[type="date"] {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    color: #374151;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.sidebar-section select:focus,
+.sidebar-section input[type="date"]:focus {
+    border-color: #008aa8;
+    outline: none;
+}
+
+.attribute-select-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.attribute-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    flex-shrink: 0;
+}
+
+.compact-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.deadline-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.deadline-preset-btn {
+    border: 1px solid #d8dee9;
+    background: #f8fafc;
+    border-radius: 16px;
+    font-size: 12px;
+    color: #4c566a;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+.deadline-preset-btn:hover {
+    border-color: #008aa8;
+    color: #008aa8;
+}
+
+@media (max-width: 768px) {
     .issue-detail-layout {
-        display: grid;
-        grid-template-columns: 1fr 280px;
-        gap: 24px;
-        align-items: start;
-        margin-top: 16px;
+        grid-template-columns: 1fr;
     }
 
-    .issue-detail-main {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
-
-    .issue-detail-meta-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 0 12px;
-        border-bottom: 1px solid #e8e8e8;
-        margin-bottom: 16px;
-    }
-
-    .issue-detail-label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: .08em;
-        color: #9b9fb0;
-        text-transform: uppercase;
-    }
-
-    .issue-detail-created {
-        font-size: 0.83rem;
-        color: #6b7280;
-    }
-
-    /* ── Camps del formulari (columna esquerra) ── */
-    .edit-field-block {
-        padding: 16px 0;
-        border-bottom: 1px solid #e8e8e8;
-    }
-
-    .edit-field-label {
-        display: block;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 6px;
-    }
-
-    .edit-field-block input[type="text"],
-    .edit-field-block textarea {
-        width: 100%;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        padding: 10px 14px;
-        font-size: 0.92rem;
-        resize: vertical;
-        box-sizing: border-box;
-        color: #374151;
-        transition: border-color 0.15s;
-    }
-
-    .edit-field-block input[type="text"]:focus,
-    .edit-field-block textarea:focus {
-        border-color: #40c4b5;
-        outline: none;
-    }
-
-    .edit-field-block select {
-        width: 100%;
-        font-size: 0.88rem;
-        padding: 8px 10px;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        color: #374151;
-        background: #fff;
-    }
-
-    .edit-form-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 20px;
-    }
-
-    .field-errors {
-        list-style: none;
-        padding: 0;
-        margin: 4px 0 0;
-        color: #de3b53;
-        font-size: 0.82rem;
-    }
-
-    /* ── Sidebar (igual que el detail) ── */
     .issue-detail-sidebar {
-        background: #fff;
-        border: 1px solid #e8e8e8;
-        border-radius: 8px;
-        padding: 0;
-        overflow: visible;
+        order: -1;
     }
-
-    .edit-sidebar-header {
-        padding: 14px 16px 10px;
-        border-bottom: 1px solid #e8e8e8;
-        border-radius: 8px 8px 0 0;
-    }
-
-    .sidebar-select-field-wrap {
-        padding: 8px 16px;
-        border-bottom: 1px solid #f0f0f0;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .sidebar-select-field-wrap select {
-        width: 100%;
-        font-size: 0.85rem;
-        padding: 5px 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        color: #374151;
-        background: #fff;
-    }
-
-    .sidebar-select-field-wrap select:focus {
-        border-color: #40c4b5;
-        outline: none;
-    }
-
-    .sidebar-label {
-        color: #9b9fb0;
-        font-size: 0.82rem;
-        text-transform: lowercase;
-    }
-
-    .sidebar-section-title {
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: .08em;
-        color: #9b9fb0;
-        text-transform: uppercase;
-        display: block;
-        margin-bottom: 8px;
-    }
-
-    .sidebar-divider {
-        margin: 0;
-        border: none;
-        border-top: 1px solid #e8e8e8;
-    }
-
-    .sidebar-section {
-        padding: 12px 16px;
-    }
-
-    .sidebar-section select,
-    .sidebar-section input[type="date"] {
-        width: 100%;
-        font-size: 0.85rem;
-        padding: 5px 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        color: #374151;
-        background: #fff;
-        box-sizing: border-box;
-    }
-
-    .sidebar-section select:focus,
-    .sidebar-section input[type="date"]:focus {
-        border-color: #40c4b5;
-        outline: none;
-    }
-
-    /* ── Reloj de deadline (header) ── */
-    .deadline-clock-display {
-        display: inline-flex;
-        align-items: center;
-        vertical-align: middle;
-        margin-right: 4px;
-    }
-
-    .deadline-clock-display.no-deadline {
-        opacity: 0.3;
-    }
-
-    .deadline-clock-display.status-red {
-        color: #de3b53;
-    }
-
-    .deadline-clock-display.status-orange {
-        color: #f39200;
-    }
-
-    .deadline-clock-display.status-green {
-        color: #9bc300;
-    }
+}
 </style>
+
+<script>
+(function () {
+    const dateInput = document.getElementById('{{ form.deadline.id_for_label }}');
+    const presetSelect = document.getElementById('{{ form.due_date_preset.id_for_label }}');
+
+    function formatDateFromNow(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + Number(days));
+        return d.toISOString().slice(0, 10);
+    }
+
+    document.querySelectorAll('.deadline-preset-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (!dateInput) {
+                return;
+            }
+            dateInput.value = formatDateFromNow(button.dataset.days);
+            if (presetSelect) {
+                presetSelect.value = '';
+            }
+        });
+    });
+
+    function paintDot(select) {
+        const targetId = select.dataset.colorTarget;
+        const dot = document.getElementById(targetId);
+        if (!dot) {
+            return;
+        }
+        const option = select.options[select.selectedIndex];
+        dot.style.backgroundColor = option ? option.dataset.color : 'transparent';
+    }
+
+    document.querySelectorAll('select[data-color-target]').forEach((select) => {
+        paintDot(select);
+        select.addEventListener('change', () => paintDot(select));
+    });
+})();
+</script>
 {% endblock %}

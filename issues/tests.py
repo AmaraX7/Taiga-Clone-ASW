@@ -1,7 +1,10 @@
+import datetime
+
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import Attachment, Comment, Issue, IssueActivity, IssueStatus
 
@@ -88,6 +91,28 @@ class IssueFeatureTests(TestCase):
 		self.assertEqual(created_issue.description, 'Issue body')
 		self.assertEqual(created_issue.created_by, self.creator)
 		self.assertEqual(created_issue.assigned_to, self.assignee)
+
+	def test_create_issue_with_attachment_in_new_view(self):
+		upload = SimpleUploadedFile('create-proof.txt', b'created together with issue')
+		response = self.client.post(
+			reverse('issue_new'),
+			{
+				'subject': 'Created with attachment',
+				'description': 'Issue body',
+				'assigned_to': self.assignee.id,
+				'status': self.status.id,
+				'attachments': upload,
+			},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		created_issue = Issue.objects.get(subject='Created with attachment')
+		self.assertTrue(
+			Attachment.objects.filter(
+				issue=created_issue,
+				file__icontains='create-proof',
+			).exists()
+		)
 
 	def test_add_comment(self):
 		response = self.client.post(
@@ -247,3 +272,16 @@ class IssueFeatureTests(TestCase):
 
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, 'created issue')
+
+	def test_set_deadline_with_preset_days(self):
+		response = self.client.post(
+			reverse('issue_set_deadline', args=[self.issue.id]),
+			{'preset_days': '7'},
+		)
+
+		self.assertEqual(response.status_code, 302)
+		self.issue.refresh_from_db()
+		self.assertEqual(
+			self.issue.deadline,
+			timezone.now().date() + datetime.timedelta(days=7),
+		)
