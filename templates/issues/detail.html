@@ -270,11 +270,11 @@
                         <input type="date" name="deadline" class="deadline-popup-input"
                             value="{{ issue.deadline|date:'Y-m-d' }}" placeholder="dd/mm/yyyy">
                         <div class="deadline-popup-presets">
-
-                            <span class="deadline-preset">In one week</span>
-                            <span class="deadline-preset">In two weeks</span>
-                            <span class="deadline-preset">In one month</span>
-                            <span class="deadline-preset">In three months</span>
+                            {% for preset in due_date_presets %}
+                            <button type="submit" name="preset_days" value="{{ preset.days_from_today }}" class="deadline-preset">
+                                {{ preset.name }}
+                            </button>
+                            {% endfor %}
                         </div>
                         <button type="submit" class="deadline-popup-save">SAVE</button>
                         {% if issue.deadline %}
@@ -871,7 +871,15 @@
         border-radius: 20px;
         color: #6b7280;
         background: #f9f9f9;
-        cursor: default;
+        cursor: pointer;
+        font-family: inherit;
+        line-height: 1.2;
+    }
+
+    .deadline-preset:hover {
+        border-color: #40c4b5;
+        color: #0f766e;
+        background: #f2fcfb;
     }
 
     .deadline-popup-save {

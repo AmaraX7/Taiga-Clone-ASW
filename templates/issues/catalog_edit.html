@@ -8,7 +8,7 @@
 </div>
 
 <div class="form-container">
-    <form method="post" class="issue-form" style="max-width:520px;">
+    <form method="post" class="issue-form" style="max-width:560px;">
         {% csrf_token %}
 
         <div class="form-group">
@@ -19,7 +19,19 @@
         {% if item.color %}
         <div class="form-group">
             <label>Color</label>
-            <input type="text" name="color" value="{{ item.color }}" pattern="^#[0-9a-fA-F]{6}$" maxlength="7" required>
+            <div class="taiga-color-picker">
+                <input type="hidden" id="id_color" name="color" value="{{ item.color }}">
+                <input type="color" class="taiga-color-native" value="{{ item.color }}" data-hidden-target="id_color">
+                <div class="taiga-color-swatches">
+                    <button type="button" class="taiga-color-swatch" data-hidden-target="id_color" data-color="#4c9aff" style="background:#4c9aff;"></button>
+                    <button type="button" class="taiga-color-swatch" data-hidden-target="id_color" data-color="#83eede" style="background:#83eede;"></button>
+                    <button type="button" class="taiga-color-swatch" data-hidden-target="id_color" data-color="#e2b93b" style="background:#e2b93b;"></button>
+                    <button type="button" class="taiga-color-swatch" data-hidden-target="id_color" data-color="#f5a623" style="background:#f5a623;"></button>
+                    <button type="button" class="taiga-color-swatch" data-hidden-target="id_color" data-color="#e44057" style="background:#e44057;"></button>
+                    <button type="button" class="taiga-color-swatch" data-hidden-target="id_color" data-color="#70728f" style="background:#70728f;"></button>
+                </div>
+                <code class="taiga-color-code" data-code-target="id_color">{{ item.color }}</code>
+            </div>
         </div>
         {% endif %}
 
@@ -36,4 +48,80 @@
         </div>
     </form>
 </div>
+
+<style>
+.taiga-color-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid #d8dee9;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.taiga-color-native {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.taiga-color-swatches {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.taiga-color-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.16);
+    cursor: pointer;
+    padding: 0;
+}
+
+.taiga-color-code {
+    margin-left: auto;
+    color: #70728f;
+    font-size: 12px;
+}
+</style>
+
+<script>
+function updateTaigaColor(targetId, value) {
+    const hidden = document.getElementById(targetId);
+    if (!hidden) {
+        return;
+    }
+    hidden.value = value;
+    document.querySelectorAll(`[data-hidden-target="${targetId}"]`).forEach((el) => {
+        if (el.matches('input[type="color"]')) {
+            el.value = value;
+        }
+    });
+    document.querySelectorAll(`[data-code-target="${targetId}"]`).forEach((el) => {
+        el.textContent = value;
+    });
+}
+
+document.querySelectorAll('.taiga-color-native').forEach((picker) => {
+    picker.addEventListener('input', (event) => {
+        updateTaigaColor(event.currentTarget.dataset.hiddenTarget, event.currentTarget.value);
+    });
+});
+
+document.querySelectorAll('.taiga-color-swatch').forEach((swatch) => {
+    swatch.addEventListener('click', (event) => {
+        updateTaigaColor(
+            event.currentTarget.dataset.hiddenTarget,
+            event.currentTarget.dataset.color,
+        );
+    });
+});
+</script>
 {% endblock %}
