@@ -912,6 +912,32 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         "404":
           $ref: '#/components/responses/NotFound'
+ 
+  /issues/{issue_id}/activities/:
+    get:
+      tags: [issues]
+      summary: List activities for an issue
+      operationId: listIssueActivities
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Array of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueActivity'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
 
   /issues/{issue_id}/deadline/:
     post:
@@ -939,17 +965,17 @@ paths:
                   description: "The deadline date (YYYY-MM-DD). Null or empty string to remove."
                   example: '2026-06-01'
       responses:
-        200:
+        "200":
           description: Updated issue details
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/IssueDetail'
-        400:
+        "400":
           $ref: '#/components/responses/BadRequest'
-        401:
+        "401":
           $ref: '#/components/responses/Unauthorized'
-        404:
+        "404":
           $ref: '#/components/responses/NotFound'
 
   /issues/{issue_id}/assign/:
@@ -977,17 +1003,17 @@ paths:
                   description: "Username of the assignee. Null or empty string to unassign."
                   example: 'john'
       responses:
-        200:
+        "200":
           description: Updated issue details
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/IssueDetail'
-        400:
+        "400":
           $ref: '#/components/responses/BadRequest'
-        401:
+        "401":
           $ref: '#/components/responses/Unauthorized'
-        404:
+        "404":
           $ref: '#/components/responses/NotFound'
 
 components:
@@ -1177,6 +1203,15 @@ components:
           format: date-time
           example: '2026-05-03T14:30:00Z'
 
+    IssueDetail:
+      allOf:
+        - $ref: '#/components/schemas/IssueList'
+        - type: object
+          properties:
+            description:
+              type: string
+              example: 'When tapping the login button on iOS Safari, nothing happens.'
+
     Watcher:
       type: object
       properties:
@@ -1323,3 +1358,22 @@ components:
         color:
           type: string
           example: '#70728f'
+
+    IssueActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        actor:
+          $ref: '#/components/schemas/IssueUser'
+        action:
+          type: string
+          example: 'updated status via API'
+        details:
+          type: string
+          example: 'In Progress'
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
