@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from issues.models import Issue, IssueStatus, IssueTag
+from issues.models import Issue, IssueStatus, IssueTag, Watcher
 
 
 class IssueStatusSerializer(serializers.ModelSerializer):
@@ -51,3 +51,22 @@ class IssueDetailSerializer(serializers.ModelSerializer):
             'tags', 'deadline', 'deadline_status',
             'assigned_to', 'created_by', 'created_at', 'modified_at',
         ]
+
+
+class WatcherSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = Watcher
+        fields = ['user_id', 'username', 'created_at']
+
+
+class IssueStatusUpdateSerializer(serializers.Serializer):
+    status_id = serializers.IntegerField()
+
+    def validate_status_id(self, value):
+        try:
+            return IssueStatus.objects.get(pk=value)
+        except IssueStatus.DoesNotExist:
+            raise serializers.ValidationError("Status not found.")
