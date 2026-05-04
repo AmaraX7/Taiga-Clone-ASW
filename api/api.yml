@@ -23,7 +23,7 @@ paths:
       summary: Health check
       operationId: healthCheck
       responses:
-        200:
+        "200":
           description: API is running
           content:
             application/json:
@@ -36,7 +36,7 @@ paths:
                   user:
                     type: string
                     example: john
-        401:
+        "401":
           $ref: '#/components/responses/Unauthorized'
 
   /users/:
@@ -45,7 +45,7 @@ paths:
       summary: List all users with their profiles
       operationId: listUsers
       responses:
-        200:
+        "200":
           description: Array of user profiles
           content:
             application/json:
@@ -53,7 +53,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserProfile'
-        401:
+        "401":
           $ref: '#/components/responses/Unauthorized'
 
   /users/{username}/:
@@ -69,15 +69,15 @@ paths:
             type: string
           example: john
       responses:
-        200:
+        "200":
           description: User profile
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
-        401:
+        "401":
           $ref: '#/components/responses/Unauthorized'
-        404:
+        "404":
           $ref: '#/components/responses/NotFound'
 
     put:
@@ -105,19 +105,19 @@ paths:
                   type: string
                   format: binary
       responses:
-        200:
+        "200":
           description: Updated user profile
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfile'
-        400:
+        "400":
           $ref: '#/components/responses/BadRequest'
-        401:
+        "401":
           $ref: '#/components/responses/Unauthorized'
-        403:
+        "403":
           $ref: '#/components/responses/Forbidden'
-        404:
+        "404":
           $ref: '#/components/responses/NotFound'
 
   /issues/:
@@ -216,7 +216,7 @@ paths:
             enum: [asc, desc]
             default: desc
       responses:
-        200:
+        "200":
           description: Array of issues
           content:
             application/json:
@@ -224,8 +224,694 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/IssueList'
-        401:
+        "401":
           $ref: '#/components/responses/Unauthorized'
+  /issues/{issue_id}/status/:
+    post:
+      tags: [issues]
+      summary: Update the status of an issue
+      operationId: updateIssueStatus
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueStatusUpdate'
+      responses:
+        "200":
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 42
+                  status:
+                    type: string
+                    example: 'In progress'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/watchers/:
+    get:
+      tags: [issues]
+      summary: List watchers of an issue
+      operationId: listIssueWatchers
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Array of watchers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Watcher'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [issues]
+      summary: Add a watcher to an issue
+      operationId: addIssueWatcher
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id]
+              properties:
+                user_id:
+                  type: integer
+                  example: 5
+      responses:
+        "201":
+          description: Watcher added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Watcher'
+        "200":
+          description: User was already watching
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 'Already watching.'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/watchers/{user_id}/:
+    delete:
+      tags: [issues]
+      summary: Remove a watcher from an issue
+      operationId: removeIssueWatcher
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 5
+      responses:
+        "204":
+          description: Watcher removed successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /statuses/:
+    get:
+      tags: [catalogs]
+      summary: List all statuses
+      operationId: listStatuses
+      responses:
+        "200":
+          description: Array of statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueStatus'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new status
+      operationId: createStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueStatusInput'
+      responses:
+        "201":
+          description: Status created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueStatus'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /statuses/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get a status by ID
+      operationId: getStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Status detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueStatus'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update a status
+      operationId: updateStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueStatusInput'
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueStatus'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete a status
+      operationId: deleteStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Status deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /types/:
+    get:
+      tags: [catalogs]
+      summary: List all issue types
+      operationId: listTypes
+      responses:
+        "200":
+          description: Array of issue types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueType'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new issue type
+      operationId: createType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueTypeInput'
+      responses:
+        "201":
+          description: Type created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueType'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /types/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get an issue type by ID
+      operationId: getType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Type detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueType'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update an issue type
+      operationId: updateType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueTypeInput'
+      responses:
+        "200":
+          description: Type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueType'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete an issue type
+      operationId: deleteType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Type deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /severities/:
+    get:
+      tags: [catalogs]
+      summary: List all severities
+      operationId: listSeverities
+      responses:
+        "200":
+          description: Array of severities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueSeverity'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new severity
+      operationId: createSeverity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCatalogInput'
+      responses:
+        "201":
+          description: Severity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSeverity'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /severities/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get a severity by ID
+      operationId: getSeverity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Severity detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSeverity'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update a severity
+      operationId: updateSeverity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCatalogInput'
+      responses:
+        "200":
+          description: Severity updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSeverity'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete a severity
+      operationId: deleteSeverity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Severity deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /priorities/:
+    get:
+      tags: [catalogs]
+      summary: List all priorities
+      operationId: listPriorities
+      responses:
+        "200":
+          description: Array of priorities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssuePriority'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new priority
+      operationId: createPriority
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCatalogInput'
+      responses:
+        "201":
+          description: Priority created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuePriority'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /priorities/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get a priority by ID
+      operationId: getPriority
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Priority detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuePriority'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update a priority
+      operationId: updatePriority
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCatalogInput'
+      responses:
+        "200":
+          description: Priority updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuePriority'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete a priority
+      operationId: deletePriority
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Priority deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /tags/:
+    get:
+      tags: [catalogs]
+      summary: List all tags
+      operationId: listTags
+      responses:
+        "200":
+          description: Array of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueTag'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new tag
+      operationId: createTag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueTagInput'
+      responses:
+        "201":
+          description: Tag created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueTag'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /tags/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get a tag by ID
+      operationId: getTag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Tag detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueTag'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update a tag
+      operationId: updateTag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueTagInput'
+      responses:
+        "200":
+          description: Tag updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueTag'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete a tag
+      operationId: deleteTag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Tag deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
 
   /issues/{issue_id}/deadline/:
     post:
@@ -477,7 +1163,8 @@ components:
           enum: [red, orange, green]
           example: 'orange'
         assigned_to:
-          $ref: '#/components/schemas/IssueUser'
+          allOf:
+           - $ref: '#/components/schemas/IssueUser'
           nullable: true
         created_by:
           $ref: '#/components/schemas/IssueUser'
@@ -490,11 +1177,149 @@ components:
           format: date-time
           example: '2026-05-03T14:30:00Z'
 
-    IssueDetail:
-      allOf:
-        - $ref: '#/components/schemas/IssueList'
-        - type: object
-          properties:
-            description:
-              type: string
-              example: 'When tapping the login button on iOS Safari, nothing happens.'
+    Watcher:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 5
+        username:
+          type: string
+          example: john
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+
+    IssueStatusUpdate:
+      type: object
+      required: [status_id]
+      properties:
+        status_id:
+          type: integer
+          example: 3
+
+    IssueStatusInput:
+      type: object
+      required: [name, slug, color]
+      properties:
+        name:
+          type: string
+          example: 'In Review'
+        slug:
+          type: string
+          example: 'in_review'
+        color:
+          type: string
+          example: '#4c9aff'
+        is_closed:
+          type: boolean
+          example: false
+        order:
+          type: integer
+          example: 3
+
+    IssueType:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'Bug'
+        slug:
+          type: string
+          example: 'bug'
+        color:
+          type: string
+          example: '#e44057'
+        order:
+          type: integer
+          example: 0
+
+    IssueTypeInput:
+      type: object
+      required: [name, slug, color]
+      properties:
+        name:
+          type: string
+          example: 'Bug'
+        slug:
+          type: string
+          example: 'bug'
+        color:
+          type: string
+          example: '#e44057'
+        order:
+          type: integer
+          example: 0
+
+    IssueSeverity:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'Critical'
+        slug:
+          type: string
+          example: 'critical'
+        color:
+          type: string
+          example: '#b91c1c'
+        order:
+          type: integer
+          example: 4
+
+    IssuePriority:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'High'
+        slug:
+          type: string
+          example: 'high'
+        color:
+          type: string
+          example: '#ef4444'
+        order:
+          type: integer
+          example: 2
+
+    IssueCatalogInput:
+      type: object
+      required: [name, slug, color]
+      properties:
+        name:
+          type: string
+          example: 'High'
+        slug:
+          type: string
+          example: 'high'
+        color:
+          type: string
+          example: '#ef4444'
+        order:
+          type: integer
+          example: 2
+
+    IssueTagInput:
+      type: object
+      required: [name, slug, color]
+      properties:
+        name:
+          type: string
+          example: 'backend'
+        slug:
+          type: string
+          example: 'backend'
+        color:
+          type: string
+          example: '#70728f'
