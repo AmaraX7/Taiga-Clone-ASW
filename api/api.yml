@@ -39,6 +39,87 @@ paths:
         401:
           $ref: '#/components/responses/Unauthorized'
 
+  /users/:
+    get:
+      tags: [users]
+      summary: List all users with their profiles
+      operationId: listUsers
+      responses:
+        200:
+          description: Array of user profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{username}/:
+    get:
+      tags: [users]
+      summary: Get a user's complete profile
+      operationId: getUserProfile
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: john
+      responses:
+        200:
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [users]
+      summary: Edit own profile (bio and/or avatar)
+      operationId: updateUserProfile
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: john
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                bio:
+                  type: string
+                  example: 'Software developer based in Barcelona.'
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        403:
+          $ref: '#/components/responses/Forbidden'
+        404:
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -100,3 +181,34 @@ components:
         message:
           type: string
           example: 'Invalid API key.'
+
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          example: john
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+
+    UserProfile:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        bio:
+          type: string
+          example: 'Software developer based in Barcelona.'
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+          example: 'https://projecte-asw1.onrender.com/media/avatars/john.jpg'
