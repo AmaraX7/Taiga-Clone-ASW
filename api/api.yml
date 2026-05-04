@@ -120,6 +120,113 @@ paths:
         404:
           $ref: '#/components/responses/NotFound'
 
+  /issues/:
+    get:
+      tags: [issues]
+      summary: List all issues
+      operationId: listIssues
+      parameters:
+        - name: q
+          in: query
+          description: Search in subject and description
+          required: false
+          schema:
+            type: string
+          example: login
+        - name: type
+          in: query
+          description: Filter by issue type slug (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [bug, question, enhancement]
+        - name: severity
+          in: query
+          description: Filter by severity slug (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [wishlist, minor, normal, important, critical]
+        - name: priority
+          in: query
+          description: Filter by priority slug (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [low, normal, high]
+        - name: status
+          in: query
+          description: Filter by status slug (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [new, in_progress, ready_for_test, needs_info, closed, rejected, postponed]
+        - name: assigned_to
+          in: query
+          description: Filter by assignee username (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: john
+        - name: created_by
+          in: query
+          description: Filter by creator username (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: jane
+        - name: sort
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum: [id, subject, status, issue_type, severity, priority, assigned_to, modified_at]
+            default: modified_at
+        - name: order
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        200:
+          description: Array of issues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueList'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -212,3 +319,105 @@ components:
           format: uri
           nullable: true
           example: 'https://projecte-asw1.onrender.com/media/avatars/john.jpg'
+
+    IssueStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'New'
+        slug:
+          type: string
+          example: 'new'
+        color:
+          type: string
+          example: '#83eede'
+        is_closed:
+          type: boolean
+          example: false
+
+    IssueUser:
+      type: object
+      properties:
+        username:
+          type: string
+          example: john
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Doe
+
+    IssueTag:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'backend'
+        slug:
+          type: string
+          example: 'backend'
+        color:
+          type: string
+          example: '#70728f'
+
+    IssueList:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        subject:
+          type: string
+          example: 'Login button not working on mobile'
+        status:
+          $ref: '#/components/schemas/IssueStatus'
+        issue_type:
+          type: string
+          example: 'bug'
+        severity:
+          type: string
+          example: 'critical'
+        priority:
+          type: string
+          example: 'high'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueTag'
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-06-01'
+        deadline_status:
+          type: string
+          nullable: true
+          enum: [red, orange, green]
+          example: 'orange'
+        assigned_to:
+          $ref: '#/components/schemas/IssueUser'
+          nullable: true
+        created_by:
+          $ref: '#/components/schemas/IssueUser'
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+        modified_at:
+          type: string
+          format: date-time
+          example: '2026-05-03T14:30:00Z'
+
+    IssueDetail:
+      allOf:
+        - $ref: '#/components/schemas/IssueList'
+        - type: object
+          properties:
+            description:
+              type: string
+              example: 'When tapping the login button on iOS Safari, nothing happens.'
