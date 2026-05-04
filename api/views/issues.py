@@ -1,9 +1,17 @@
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
 from django.db.models import Q
 
-from issues.models import Issue
-from api.serializers.issues import IssueListSerializer
+from issues.models import Issue, Watcher, IssueActivity
+from api.serializers.issues import (
+    IssueListSerializer,
+    WatcherSerializer,
+    IssueStatusUpdateSerializer,
+)
 
 _FILTER_FIELDS = {
     'type':        'issue_type',
@@ -24,6 +32,10 @@ _SORTABLE_FIELDS = {
     'assigned_to': 'assigned_to__username',
     'modified_at': 'modified_at',
 }
+
+
+def _add_activity(issue, actor, action, details=''):
+    IssueActivity.objects.create(issue=issue, actor=actor, action=action, details=details)
 
 
 class IssueListView(APIView):
@@ -54,3 +66,51 @@ class IssueListView(APIView):
 
         serializer = IssueListSerializer(issues, many=True)
         return Response(serializer.data)
+
+
+@api_view(['POST'])
+def issue_set_status(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+    serializer = IssueStatusUpdateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    new_status = serializer.validated_data['status_id']
+    issue.status = new_status
+    issue.save(update_fields=['status'])
+    _add_activity(issue, request.user, 'updated status via API', new_status.name)
+
+    return Response({'id': issue.id, 'status': new_status.name}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'POST'])
+def issue_watchers(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+
+    if request.method == 'GET':
+        watchers = issue.watchers.select_related('user').all()
+        serializer = WatcherSerializer(watchers, many=True)
+        return Response(serializer.data)
+
+    user_id = request.data.get('user_id')
+    if not user_id:
+        return Response({'error': 'user_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = get_object_or_404(User, pk=user_id)
+    watcher, created = Watcher.objects.get_or_create(issue=issue, user=user)
+    if created:
+        _add_activity(issue, request.user, 'added watcher via API', user.username)
+        return Response(WatcherSerializer(watcher).data, status=status.HTTP_201_CREATED)
+    else:
+        return Response({'detail': 'Already watching.'}, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+def issue_watcher_remove(request, issue_id, user_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+    deleted, _ = Watcher.objects.filter(issue=issue, user_id=user_id).delete()
+    if deleted:
+        user = User.objects.filter(pk=user_id).first()
+        _add_activity(issue, request.user, 'removed watcher via API', user.username if user else str(user_id))
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response({'error': 'Watcher not found.'}, status=status.HTTP_404_NOT_FOUND)
