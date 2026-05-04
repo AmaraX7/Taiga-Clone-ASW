@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from issues.models import Issue, IssueActivity, IssueStatus, IssueTag, Watcher
+from issues.models import Comment, Issue, IssueActivity, IssueStatus, IssueTag, Watcher
 
 
 class IssueStatusSerializer(serializers.ModelSerializer):
@@ -60,6 +60,16 @@ class WatcherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Watcher
         fields = ['user_id', 'username', 'created_at']
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    issue_id = serializers.IntegerField(source='issue.id', read_only=True)
+    author = IssueUserSerializer(read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'issue_id', 'author', 'text', 'created_at', 'modified_at']
+        read_only_fields = ['id', 'issue_id', 'author', 'created_at', 'modified_at']
 
 
 class IssueStatusUpdateSerializer(serializers.Serializer):

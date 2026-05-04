@@ -265,6 +265,128 @@ paths:
         "404":
           $ref: '#/components/responses/NotFound'
 
+  /issues/{issue_id}/comments/:
+    get:
+      tags: [issues]
+      summary: List comments of an issue
+      operationId: listIssueComments
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Array of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [issues]
+      summary: Create a new comment on an issue
+      operationId: createIssueComment
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  example: 'I can reproduce this bug on iOS Safari.'
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /comments/{comment_id}/:
+    put:
+      tags: [issues]
+      summary: Update a comment (author only)
+      operationId: updateComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 7
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  example: 'Updated comment text after retesting.'
+      responses:
+        "200":
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [issues]
+      summary: Delete a comment (author only)
+      operationId: deleteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 7
+      responses:
+        "204":
+          description: Comment deleted successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
   /issues/{issue_id}/watchers/:
     get:
       tags: [issues]
@@ -358,6 +480,32 @@ paths:
       responses:
         "204":
           description: Watcher removed successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/activities/:
+    get:
+      tags: [issues]
+      summary: List activities of an issue
+      operationId: listIssueActivities
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Array of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueActivity'
         "401":
           $ref: '#/components/responses/Unauthorized'
         "404":
@@ -1109,6 +1257,48 @@ components:
         username:
           type: string
           example: john
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        issue_id:
+          type: integer
+          example: 42
+        author:
+          $ref: '#/components/schemas/IssueUser'
+        text:
+          type: string
+          example: 'I can reproduce this bug on iOS Safari.'
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+        modified_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+
+    IssueActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        actor:
+          $ref: '#/components/schemas/IssueUser'
+        action:
+          type: string
+          example: 'added comment via API'
+        details:
+          type: string
+          example: 'I can reproduce this bug on iOS Safari.'
         created_at:
           type: string
           format: date-time

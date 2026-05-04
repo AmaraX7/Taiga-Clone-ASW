@@ -6,12 +6,13 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from django.db.models import Q
 
-from issues.models import Issue, Watcher, IssueActivity
+from issues.models import Comment, Issue, Watcher, IssueActivity
 from api.serializers.issues import (
+    CommentSerializer,
     IssueActivitySerializer,
     IssueListSerializer,
-    WatcherSerializer,
     IssueStatusUpdateSerializer,
+    WatcherSerializer,
 )
 
 _FILTER_FIELDS = {
@@ -104,6 +105,48 @@ def issue_watchers(request, issue_id):
         return Response(WatcherSerializer(watcher).data, status=status.HTTP_201_CREATED)
     else:
         return Response({'detail': 'Already watching.'}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', 'POST'])
+def issue_comments(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+
+    if request.method == 'GET':
+        comments = Comment.objects.filter(issue=issue).select_related('author')
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+    serializer = CommentSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    comment = serializer.save(issue=issue, author=request.user)
+    _add_activity(issue, request.user, 'added comment via API', comment.text[:80])
+    return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PUT', 'DELETE'])
+def comment_detail(request, comment_id):
+    comment = get_object_or_404(Comment.objects.select_related('issue'), pk=comment_id)
+
+    if comment.author_id != request.user.id:
+        return Response(
+            {'message': 'You do not have permission to perform this action.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    if request.method == 'PUT':
+        serializer = CommentSerializer(comment, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        updated_comment = serializer.save()
+        _add_activity(updated_comment.issue, request.user, 'edited comment via API', updated_comment.text[:80])
+        return Response(CommentSerializer(updated_comment).data, status=status.HTTP_200_OK)
+
+    _add_activity(comment.issue, request.user, 'deleted comment via API', comment.text[:80])
+    comment.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['DELETE'])

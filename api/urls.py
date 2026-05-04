@@ -11,7 +11,14 @@ from api.views.catalogs import (
     IssueTagViewSet,
     IssueTypeViewSet,
 )
-from api.views.issues import issue_set_status, issue_watchers, issue_watcher_remove, issue_activities 
+from api.views.issues import (
+    comment_detail,
+    issue_activities,
+    issue_comments,
+    issue_set_status,
+    issue_watcher_remove,
+    issue_watchers,
+)
 from api.views.users import UserDetailView, UserListView
 
 app_name = 'api'
@@ -43,9 +50,11 @@ urlpatterns = [
 
     # Issues
     path('issues/<int:issue_id>/status/', issue_set_status, name='api-issue-status'),
+    path('issues/<int:issue_id>/comments/', issue_comments, name='api-issue-comments'),
+    path('comments/<int:comment_id>/', comment_detail, name='api-comment-detail'),
     path('issues/<int:issue_id>/watchers/', issue_watchers, name='api-issue-watchers'),
     path('issues/<int:issue_id>/watchers/<int:user_id>/', issue_watcher_remove, name='api-issue-watcher-remove'),
-    path('issues/<int:issue_id>/activities/', issue_activities),
+    path('issues/<int:issue_id>/activities/', issue_activities, name='api-issue-activities'),
 
     # Users
     path('users/', UserListView.as_view(), name='api-users'),
