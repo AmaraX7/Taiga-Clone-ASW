@@ -8,6 +8,7 @@ from django.db.models import Q
 
 from issues.models import Issue, Watcher, IssueActivity
 from api.serializers.issues import (
+    IssueActivitySerializer,
     IssueListSerializer,
     WatcherSerializer,
     IssueStatusUpdateSerializer,
@@ -114,3 +115,10 @@ def issue_watcher_remove(request, issue_id, user_id):
         _add_activity(issue, request.user, 'removed watcher via API', user.username if user else str(user_id))
         return Response(status=status.HTTP_204_NO_CONTENT)
     return Response({'error': 'Watcher not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def issue_activities(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+    activities = IssueActivity.objects.filter(issue=issue).select_related('actor').order_by('-created_at')
+    serializer = IssueActivitySerializer(activities, many=True)
+    return Response(serializer.data)
