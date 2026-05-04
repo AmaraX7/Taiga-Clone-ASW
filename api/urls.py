@@ -12,6 +12,9 @@ from api.views.catalogs import (
     IssueTypeViewSet,
 )
 from api.views.issues import (
+    IssueAssignView,
+    IssueDeadlineView,
+    IssueListView,
     comment_detail,
     issue_activities,
     issue_comments,
@@ -44,11 +47,13 @@ router.register('tags', IssueTagViewSet, basename='tag')
 urlpatterns = [
     # Health
     path('', health, name='health'),
-
     # Catalogs (via router)
     *router.urls,
 
     # Issues
+    path('issues/', IssueListView.as_view(), name='issue-list'),
+    path('issues/<int:issue_id>/deadline/', IssueDeadlineView.as_view(), name='issue-deadline'),
+    path('issues/<int:issue_id>/assign/', IssueAssignView.as_view(), name='issue-assign'),
     path('issues/<int:issue_id>/status/', issue_set_status, name='api-issue-status'),
     path('issues/<int:issue_id>/comments/', issue_comments, name='api-issue-comments'),
     path('comments/<int:comment_id>/', comment_detail, name='api-comment-detail'),

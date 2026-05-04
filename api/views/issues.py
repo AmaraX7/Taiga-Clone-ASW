@@ -1,15 +1,17 @@
 from rest_framework.decorators import api_view
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
+import datetime
+
 from django.contrib.auth.models import User
 from django.db.models import Q
-
-from issues.models import Comment, Issue, Watcher, IssueActivity
+from django.shortcuts import get_object_or_404
+from issues.models import Comment, Issue, IssueActivity, Watcher
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from api.serializers.issues import (
     CommentSerializer,
     IssueActivitySerializer,
+    IssueDetailSerializer,
     IssueListSerializer,
     IssueStatusUpdateSerializer,
     WatcherSerializer,
@@ -69,6 +71,60 @@ class IssueListView(APIView):
         serializer = IssueListSerializer(issues, many=True)
         return Response(serializer.data)
 
+
+class IssueDeadlineView(APIView):
+    def post(self, request, issue_id):
+        try:
+            issue = Issue.objects.get(pk=issue_id)
+        except Issue.DoesNotExist:
+            return Response(
+                {'message': f"No issue with id '{issue_id}' found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        deadline_str = request.data.get('deadline')
+        if deadline_str:
+            try:
+                issue.deadline = datetime.date.fromisoformat(deadline_str)
+            except ValueError:
+                return Response(
+                    {'message': 'Invalid date format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            issue.deadline = None
+
+        issue.save(update_fields=['deadline'])
+        serializer = IssueDetailSerializer(issue)
+        return Response(serializer.data)
+
+
+class IssueAssignView(APIView):
+    def post(self, request, issue_id):
+        try:
+            issue = Issue.objects.get(pk=issue_id)
+        except Issue.DoesNotExist:
+            return Response(
+                {'message': f"No issue with id '{issue_id}' found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        username = request.data.get('assigned_to')
+        if username:
+            try:
+                user = User.objects.get(username=username)
+                issue.assigned_to = user
+            except User.DoesNotExist:
+                return Response(
+                    {'message': f"No user with username '{username}' found."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            issue.assigned_to = None
+
+        issue.save(update_fields=['assigned_to'])
+        serializer = IssueDetailSerializer(issue)
+        return Response(serializer.data)
 
 @api_view(['POST'])
 def issue_set_status(request, issue_id):
