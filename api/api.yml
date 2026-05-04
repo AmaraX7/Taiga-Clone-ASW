@@ -227,6 +227,83 @@ paths:
         401:
           $ref: '#/components/responses/Unauthorized'
 
+  /issues/{issue_id}/deadline/:
+    post:
+      tags: [issues]
+      summary: Set or remove the deadline for an issue
+      operationId: setIssueDeadline
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deadline:
+                  type: string
+                  format: date
+                  nullable: true
+                  description: "The deadline date (YYYY-MM-DD). Null or empty string to remove."
+                  example: '2026-06-01'
+      responses:
+        200:
+          description: Updated issue details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/assign/:
+    post:
+      tags: [issues]
+      summary: Assign or unassign an issue
+      operationId: assignIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assigned_to:
+                  type: string
+                  nullable: true
+                  description: "Username of the assignee. Null or empty string to unassign."
+                  example: 'john'
+      responses:
+        200:
+          description: Updated issue details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     ApiKeyAuth:
