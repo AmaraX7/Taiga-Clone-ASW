@@ -3,7 +3,10 @@ from rest_framework.response import Response
 from django.db.models import Q
 
 from issues.models import Issue
-from api.serializers.issues import IssueListSerializer
+from django.contrib.auth.models import User
+from api.serializers.issues import IssueListSerializer, IssueDetailSerializer
+from rest_framework import status
+import datetime
 
 _FILTER_FIELDS = {
     'type':        'issue_type',
@@ -53,4 +56,59 @@ class IssueListView(APIView):
             issues = issues.order_by(order_field)
 
         serializer = IssueListSerializer(issues, many=True)
+        return Response(serializer.data)
+
+
+class IssueDeadlineView(APIView):
+    def post(self, request, issue_id):
+        try:
+            issue = Issue.objects.get(pk=issue_id)
+        except Issue.DoesNotExist:
+            return Response(
+                {'message': f"No issue with id '{issue_id}' found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        deadline_str = request.data.get('deadline')
+        if deadline_str:
+            try:
+                issue.deadline = datetime.date.fromisoformat(deadline_str)
+            except ValueError:
+                return Response(
+                    {'message': 'Invalid date format. Use YYYY-MM-DD'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            issue.deadline = None
+
+        issue.save(update_fields=['deadline'])
+        serializer = IssueDetailSerializer(issue)
+        return Response(serializer.data)
+
+
+class IssueAssignView(APIView):
+    def post(self, request, issue_id):
+        try:
+            issue = Issue.objects.get(pk=issue_id)
+        except Issue.DoesNotExist:
+            return Response(
+                {'message': f"No issue with id '{issue_id}' found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        username = request.data.get('assigned_to')
+        if username:
+            try:
+                user = User.objects.get(username=username)
+                issue.assigned_to = user
+            except User.DoesNotExist:
+                return Response(
+                    {'message': f"No user with username '{username}' found."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            issue.assigned_to = None
+
+        issue.save(update_fields=['assigned_to'])
+        serializer = IssueDetailSerializer(issue)
         return Response(serializer.data)
