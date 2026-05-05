@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
 from api.views.catalogs import (
-    DueDatePresetViewSet,
     IssuePriorityViewSet,
     IssueSeverityViewSet,
     IssueStatusViewSet,
@@ -44,7 +43,6 @@ router.register('types', IssueTypeViewSet, basename='type')
 router.register('severities', IssueSeverityViewSet, basename='severity')
 router.register('priorities', IssuePriorityViewSet, basename='priority')
 router.register('tags', IssueTagViewSet, basename='tag')
-router.register('due-date-presets', DueDatePresetViewSet, basename='due-date-preset')
 
 
 urlpatterns = [

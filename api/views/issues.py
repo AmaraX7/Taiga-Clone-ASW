@@ -140,9 +140,18 @@ class IssueAssignView(APIView):
         serializer = IssueDetailSerializer(issue)
         return Response(serializer.data)
 
-@api_view(['DELETE'])
+@api_view(['GET', 'DELETE'])
 def issue_delete(request, issue_id):
-    issue = get_object_or_404(Issue, pk=issue_id)
+    issue = get_object_or_404(
+        Issue.objects.select_related('status', 'assigned_to', 'created_by')
+                     .prefetch_related('tags'),
+        pk=issue_id,
+    )
+
+    if request.method == 'GET':
+        serializer = IssueDetailSerializer(issue)
+        return Response(serializer.data)
+
     if issue.created_by != request.user:
         return Response(
             {'message': 'You do not have permission to delete this issue.'},

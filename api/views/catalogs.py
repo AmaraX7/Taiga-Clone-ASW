@@ -1,9 +1,8 @@
 from rest_framework import viewsets
 
-from issues.models import DueDatePreset, IssuePriority, IssueSeverity, IssueStatus, IssueTag, IssueType
+from issues.models import IssuePriority, IssueSeverity, IssueStatus, IssueTag, IssueType
 
 from api.serializers.catalogs import (
-    DueDatePresetSerializer,
     IssuePrioritySerializer,
     IssueSeveritySerializer,
     IssueStatusSerializer,
@@ -11,10 +10,6 @@ from api.serializers.catalogs import (
     IssueTypeSerializer,
 )
 
-
-class DueDatePresetViewSet(viewsets.ModelViewSet):
-    queryset = DueDatePreset.objects.all()
-    serializer_class = DueDatePresetSerializer
 
 
 class IssueStatusViewSet(viewsets.ModelViewSet):

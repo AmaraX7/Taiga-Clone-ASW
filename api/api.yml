@@ -228,6 +228,29 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 
   /issues/{issue_id}/:
+    get:
+      tags: [issues]
+      summary: Get detail of an issue
+      operationId: getIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Issue detail with nested data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
     delete:
       tags: [issues]
       summary: Delete an issue
@@ -1085,116 +1108,6 @@ paths:
         "404":
           $ref: '#/components/responses/NotFound'
 
-  /due-date-presets/:
-    get:
-      tags: [catalogs]
-      summary: List all due date presets
-      operationId: listDueDatePresets
-      responses:
-        "200":
-          description: Array of due date presets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DueDatePreset'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-    post:
-      tags: [catalogs]
-      summary: Create a new due date preset
-      operationId: createDueDatePreset
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DueDatePresetInput'
-      responses:
-        "201":
-          description: Due date preset created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DueDatePreset'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-
-  /due-date-presets/{id}/:
-    get:
-      tags: [catalogs]
-      summary: Get a due date preset by ID
-      operationId: getDueDatePreset
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        "200":
-          description: Due date preset detail
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DueDatePreset'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-        "404":
-          $ref: '#/components/responses/NotFound'
-    put:
-      tags: [catalogs]
-      summary: Update a due date preset
-      operationId: updateDueDatePreset
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DueDatePresetInput'
-      responses:
-        "200":
-          description: Due date preset updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DueDatePreset'
-        "400":
-          $ref: '#/components/responses/BadRequest'
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-        "404":
-          $ref: '#/components/responses/NotFound'
-    delete:
-      tags: [catalogs]
-      summary: Delete a due date preset
-      operationId: deleteDueDatePreset
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        "204":
-          description: Due date preset deleted
-        "401":
-          $ref: '#/components/responses/Unauthorized'
-        "404":
-          $ref: '#/components/responses/NotFound'
-
   /issues/{issue_id}/deadline/:
     post:
       tags: [issues]
@@ -1678,33 +1591,3 @@ components:
         color:
           type: string
           example: '#70728f'
-
-    DueDatePreset:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        name:
-          type: string
-          example: 'In 2 weeks'
-        days_from_today:
-          type: integer
-          example: 14
-        order:
-          type: integer
-          example: 0
-
-    DueDatePresetInput:
-      type: object
-      required: [name, days_from_today, order]
-      properties:
-        name:
-          type: string
-          example: 'In 2 weeks'
-        days_from_today:
-          type: integer
-          example: 14
-        order:
-          type: integer
-          example: 0
