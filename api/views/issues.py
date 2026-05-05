@@ -98,6 +98,20 @@ class IssueDeadlineView(APIView):
         serializer = IssueDetailSerializer(issue)
         return Response(serializer.data)
 
+    def delete(self, request, issue_id):
+        try:
+            issue = Issue.objects.get(pk=issue_id)
+        except Issue.DoesNotExist:
+            return Response(
+                {'message': f"No issue with id '{issue_id}' found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        issue.deadline = None
+        issue.save(update_fields=['deadline'])
+        serializer = IssueDetailSerializer(issue)
+        return Response(serializer.data)
+
 
 class IssueAssignView(APIView):
     def post(self, request, issue_id):
