@@ -226,6 +226,29 @@ paths:
                   $ref: '#/components/schemas/IssueList'
         "401":
           $ref: '#/components/responses/Unauthorized'
+
+  /issues/{issue_id}/:
+    delete:
+      tags: [issues]
+      summary: Delete an issue
+      operationId: deleteIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "204":
+          description: Issue deleted successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
   /issues/{issue_id}/status/:
     post:
       tags: [issues]
