@@ -267,7 +267,7 @@ paths:
 
   /issues/{issue_id}/comments/:
     get:
-      tags: [issues]
+      tags: [comments]
       summary: List comments of an issue
       operationId: listIssueComments
       parameters:
@@ -276,7 +276,7 @@ paths:
           required: true
           schema:
             type: integer
-          example: 42
+          example: 1
       responses:
         "200":
           description: Array of comments
@@ -292,7 +292,7 @@ paths:
           $ref: '#/components/responses/NotFound'
 
     post:
-      tags: [issues]
+      tags: [comments]
       summary: Create a new comment on an issue
       operationId: createIssueComment
       parameters:
@@ -329,7 +329,7 @@ paths:
 
   /comments/{comment_id}/:
     put:
-      tags: [issues]
+      tags: [comments]
       summary: Update a comment (author only)
       operationId: updateComment
       parameters:
@@ -367,7 +367,7 @@ paths:
           $ref: '#/components/responses/NotFound'
 
     delete:
-      tags: [issues]
+      tags: [comments]
       summary: Delete a comment (author only)
       operationId: deleteComment
       parameters:
