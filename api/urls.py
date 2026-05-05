@@ -18,6 +18,7 @@ from api.views.issues import (
     comment_detail,
     issue_activities,
     issue_comments,
+    issue_delete,
     issue_set_status,
     issue_watcher_remove,
     issue_watchers,
@@ -52,6 +53,7 @@ urlpatterns = [
 
     # Issues
     path('issues/', IssueListView.as_view(), name='issue-list'),
+    path('issues/<int:issue_id>/', issue_delete, name='issue-delete'),
     path('issues/<int:issue_id>/deadline/', IssueDeadlineView.as_view(), name='issue-deadline'),
     path('issues/<int:issue_id>/assign/', IssueAssignView.as_view(), name='issue-assign'),
     path('issues/<int:issue_id>/status/', issue_set_status, name='api-issue-status'),
