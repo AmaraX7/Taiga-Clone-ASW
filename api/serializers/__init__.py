@@ -1,5 +1,4 @@
 from api.serializers.catalogs import (
-	DueDatePresetSerializer,
 	IssuePrioritySerializer,
 	IssueSeveritySerializer,
 	IssueStatusSerializer,
@@ -8,7 +7,6 @@ from api.serializers.catalogs import (
 )
 
 __all__ = [
-	'DueDatePresetSerializer',
 	'IssuePrioritySerializer',
 	'IssueSeveritySerializer',
 	'IssueStatusSerializer',

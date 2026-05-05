@@ -11,6 +11,7 @@ from api.serializers.catalogs import (
 )
 
 
+
 class IssueStatusViewSet(viewsets.ModelViewSet):
     queryset = IssueStatus.objects.all()
     serializer_class = IssueStatusSerializer

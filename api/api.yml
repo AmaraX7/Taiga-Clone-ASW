@@ -228,6 +228,29 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 
   /issues/{issue_id}/:
+    get:
+      tags: [issues]
+      summary: Get detail of an issue
+      operationId: getIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Issue detail with nested data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
     delete:
       tags: [issues]
       summary: Delete an issue
@@ -1082,12 +1105,13 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
         "404":
+        "404":
           $ref: '#/components/responses/NotFound'
- 
+
   /issues/{issue_id}/deadline/:
     post:
       tags: [issues]
-      summary: Set or remove the deadline for an issue
+      summary: Set the deadline for an issue
       operationId: setIssueDeadline
       parameters:
         - name: issue_id
@@ -1106,8 +1130,7 @@ paths:
                 deadline:
                   type: string
                   format: date
-                  nullable: true
-                  description: "The deadline date (YYYY-MM-DD). Null or empty string to remove."
+                  description: "The deadline date (YYYY-MM-DD)."
                   example: '2026-06-01'
       responses:
         "200":
@@ -1118,6 +1141,29 @@ paths:
                 $ref: '#/components/schemas/IssueDetail'
         "400":
           $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [issues]
+      summary: Remove the deadline for an issue
+      operationId: deleteIssueDeadline
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Updated issue details (without deadline)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
         "401":
           $ref: '#/components/responses/Unauthorized'
         "404":
