@@ -120,6 +120,27 @@ paths:
         "404":
           $ref: '#/components/responses/NotFound'
 
+    delete:
+      tags: [users]
+      summary: Delete own profile and user account
+      operationId: deleteUserProfile
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: john
+      responses:
+        "204":
+          description: User deleted successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
   /issues/:
     get:
       tags: [issues]

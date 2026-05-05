@@ -65,3 +65,18 @@ class UserDetailView(APIView):
             )
         serializer.save()
         return Response(serializer.data)
+
+    def delete(self, request, username):
+        if request.user.username != username:
+            return Response(
+                {'message': 'You do not have permission to perform this action.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        profile = self._get_profile(username)
+        if not profile:
+            return Response(
+                {'message': f"No user with username '{username}' found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        profile.user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
