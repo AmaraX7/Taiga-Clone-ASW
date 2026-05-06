@@ -77,6 +77,24 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'issue_id', 'author', 'created_at', 'modified_at']
 
 
+class IssueBulkInsertSerializer(serializers.Serializer):
+    issues_text = serializers.CharField()
+    status_id = serializers.IntegerField(required=False, allow_null=True)
+
+    def validate_issues_text(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("This field may not be blank.")
+        return value
+
+    def validate_status_id(self, value):
+        if value is None:
+            return None
+        try:
+            return IssueStatus.objects.get(pk=value)
+        except IssueStatus.DoesNotExist:
+            raise serializers.ValidationError("Status not found.")
+
+
 class IssueStatusUpdateSerializer(serializers.Serializer):
     status_id = serializers.IntegerField()
 

@@ -4,12 +4,13 @@ import datetime
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from issues.models import Comment, Issue, IssueActivity, Watcher
+from issues.models import Comment, Issue, IssueActivity, IssueStatus, Watcher
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.serializers.issues import (
     CommentSerializer,
+    IssueBulkInsertSerializer,
     IssueActivitySerializer,
     IssueDetailSerializer,
     IssueListSerializer,
@@ -84,6 +85,55 @@ class IssueListView(APIView):
             IssueDetailSerializer(issue).data,
             status=status.HTTP_201_CREATED
         )
+
+@api_view(['POST'])
+def issue_bulk_insert(request):
+    serializer = IssueBulkInsertSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    issues_text = serializer.validated_data['issues_text']
+    selected_status = serializer.validated_data.get('status_id')
+    default_status = selected_status or IssueStatus.objects.order_by('order', 'name').first()
+
+    if not default_status:
+        return Response(
+            {'message': 'No statuses available to create issues.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    created_issues = []
+    for raw_line in issues_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if '|' in line:
+            subject, description = [part.strip() for part in line.split('|', 1)]
+        else:
+            subject, description = line, ''
+
+        if not subject:
+            continue
+
+        issue = Issue.objects.create(
+            subject=subject,
+            description=description,
+            status=default_status,
+            created_by=request.user,
+        )
+        _add_activity(issue, request.user, 'created issue (bulk) via API', issue.subject)
+        created_issues.append(issue)
+
+    serializer = IssueListSerializer(created_issues, many=True)
+    return Response(
+        {
+            'created_count': len(created_issues),
+            'issues': serializer.data,
+        },
+        status=status.HTTP_201_CREATED,
+    )
+
 
 class IssueDeadlineView(APIView):
     def post(self, request, issue_id):

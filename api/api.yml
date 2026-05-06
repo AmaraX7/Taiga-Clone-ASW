@@ -248,6 +248,29 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
 
+  /issues/bulk/:
+    post:
+      tags: [issues]
+      summary: Bulk insert issues
+      operationId: bulkInsertIssues
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueBulkInsertInput'
+      responses:
+        "201":
+          description: Issues created by bulk insert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueBulkInsertResult'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
   /issues/{issue_id}/:
     get:
       tags: [issues]
@@ -1510,6 +1533,37 @@ components:
           type: string
           format: date-time
           example: '2026-05-01T10:00:00Z'
+
+    IssueBulkInsertInput:
+      type: object
+      required: [issues_text]
+      properties:
+        issues_text:
+          type: string
+          description: >
+            One issue per line using format `Subject | Description`.
+            Description is optional.
+          example: |
+            Login button not working | Tap on mobile Safari does nothing
+            Error when uploading avatar
+        status_id:
+          type: integer
+          nullable: true
+          description: >
+            Optional status ID to apply to all created issues.
+            If omitted, the default status is used.
+          example: 1
+
+    IssueBulkInsertResult:
+      type: object
+      properties:
+        created_count:
+          type: integer
+          example: 2
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueList'
 
     IssueStatusUpdate:
       type: object
