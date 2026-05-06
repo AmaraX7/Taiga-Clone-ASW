@@ -226,6 +226,27 @@ paths:
                   $ref: '#/components/schemas/IssueList'
         "401":
           $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [issues]
+      summary: Create a new issue
+      operationId: createIssue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCreateInput'
+      responses:
+        "201":
+          description: Issue created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
 
   /issues/{issue_id}/:
     get:
@@ -265,6 +286,38 @@ paths:
       responses:
         "204":
           description: Issue deleted successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [issues]
+      summary: Update an issue (only creator)
+      operationId: updateIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueUpdateInput'
+      responses:
+        "200":
+          description: Issue updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
         "401":
           $ref: '#/components/responses/Unauthorized'
         "403":
@@ -1105,7 +1158,6 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
         "404":
-        "404":
           $ref: '#/components/responses/NotFound'
 
   /issues/{issue_id}/deadline/:
@@ -1591,3 +1643,74 @@ components:
         color:
           type: string
           example: '#70728f'
+    IssueCreateInput:
+      type: object
+      required: [subject, description, status_id, issue_type, severity_id, priority_id]
+      properties:
+        subject:
+          type: string
+          example: 'Login bug'
+        description:
+          type: string
+          example: 'Login button does not respond on iOS Safari.'
+        status_id:
+          type: integer
+          example: 1
+        issue_type:
+          type: string
+          example: 'bug'
+        severity:
+          type: string
+          example: 'normal'
+        priority:
+          type: string
+          example: 'normal'
+        tags:
+          type: array
+          items:
+            type: integer
+          example: []
+        assigned_to_id:
+          type: integer
+          nullable: true
+          example: 5
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-06-01'
+    IssueUpdateInput:
+      type: object
+      properties:
+        subject:
+          type: string
+          example: 'Updated subject'
+        description:
+          type: string
+          example: 'Updated description'
+        status_id:
+          type: integer
+          example: 2
+        issue_type:
+          type: string
+          example: 'bug'
+        severity:
+          type: string
+          example: 'Normal'
+        priority:
+          type: string
+          example: 'Normal'
+        tags:
+          type: array
+          items:
+            type: string
+          example: []
+        assigned_to_id:
+          type: integer
+          nullable: true
+          example: 5
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-06-10'

@@ -43,11 +43,16 @@ class IssueDetailSerializer(serializers.ModelSerializer):
     created_by = IssueUserSerializer(read_only=True)
     tags = IssueTagSerializer(many=True, read_only=True)
     deadline_status = serializers.ReadOnlyField()
+    status_id = serializers.PrimaryKeyRelatedField (
+    queryset=IssueStatus.objects.all(),
+    source='status',
+    write_only=True
+)
 
     class Meta:
         model = Issue
         fields = [
-            'id', 'subject', 'description', 'status', 'issue_type', 'severity', 'priority',
+            'id', 'status_id', 'subject', 'description', 'status', 'issue_type', 'severity', 'priority',
             'tags', 'deadline', 'deadline_status',
             'assigned_to', 'created_by', 'created_at', 'modified_at',
         ]
