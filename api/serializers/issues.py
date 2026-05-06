@@ -96,3 +96,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
         model = Attachment
         fields = ['id', 'issue_id', 'uploaded_by', 'file', 'created_at']
         read_only_fields = ['id', 'issue_id', 'uploaded_by', 'created_at']
+class AttachmentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = ['file']

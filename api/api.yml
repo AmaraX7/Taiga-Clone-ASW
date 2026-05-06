@@ -557,6 +557,90 @@ paths:
         "404":
           $ref: '#/components/responses/NotFound'
 
+  /issues/{issue_id}/attachments/:
+    get:
+      tags: [issues]
+      summary: List attachments of an issue
+      operationId: listIssueAttachments
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Array of attachments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [issues]
+      summary: Upload an attachment to an issue
+      operationId: createIssueAttachment
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Attachment uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /attachments/{attachment_id}/:
+    delete:
+      tags: [issues]
+      summary: Delete an attachment (only uploader)
+      operationId: deleteAttachment
+      parameters:
+        - name: attachment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 10
+      responses:
+        "204":
+          description: Attachment deleted successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
   /statuses/:
     get:
       tags: [catalogs]

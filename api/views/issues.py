@@ -4,7 +4,7 @@ import datetime
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from issues.models import Comment, Issue, IssueActivity, Watcher
+from issues.models import Comment, Issue, IssueActivity, Watcher, Attachment
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -15,6 +15,8 @@ from api.serializers.issues import (
     IssueListSerializer,
     IssueStatusUpdateSerializer,
     WatcherSerializer,
+    AttachmentSerializer,
+    AttachmentCreateSerializer,
 )
 
 _FILTER_FIELDS = {
@@ -256,3 +258,50 @@ def issue_activities(request, issue_id):
     activities = IssueActivity.objects.filter(issue=issue).select_related('actor').order_by('-created_at')
     serializer = IssueActivitySerializer(activities, many=True)
     return Response(serializer.data)
+    
+@api_view(['GET', 'POST'])
+def issue_attachments(request, issue_id):
+    issue = get_object_or_404(Issue, pk=issue_id)
+
+    if request.method == 'GET':
+        attachments = issue.attachments.select_related('uploaded_by').all()
+        serializer = AttachmentSerializer(attachments, many=True)
+        return Response(serializer.data)
+
+    serializer = AttachmentCreateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    attachment = serializer.save(
+        issue=issue,
+        uploaded_by=request.user
+    )
+
+    _add_activity(issue, request.user, 'added attachment via API', attachment.file.name)
+
+    return Response(AttachmentSerializer(attachment).data, status=status.HTTP_201_CREATED)
+
+@api_view(['DELETE'])
+def attachment_delete(request, attachment_id):
+    attachment = get_object_or_404(Attachment, pk=attachment_id)
+
+    if attachment.uploaded_by != request.user:
+        return Response(
+            {'message': 'You do not have permission to delete this attachment.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    issue = attachment.issue
+    filename = attachment.file.name
+
+    file_path = attachment.file.path
+
+    attachment.delete()
+
+    import os
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+
+    _add_activity(issue, request.user, 'deleted attachment via API', filename)
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
