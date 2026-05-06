@@ -5,6 +5,24 @@ import datetime
 from .models import DueDatePreset, Issue, IssuePriority, IssueSeverity, IssueStatus, IssueTag, IssueType
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    widget = MultipleFileInput
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            if not data:
+                return []
+            return [single_file_clean(item, initial) for item in data]
+        if not data:
+            return []
+        return [single_file_clean(data, initial)]
+
+
 class IssueForm(forms.ModelForm):
     deadline = forms.DateField(
         required=False,
@@ -17,6 +35,10 @@ class IssueForm(forms.ModelForm):
         required=False,
         empty_label='Unassigned',
         label='Assign to',
+    )
+    attachments = MultipleFileField(
+        required=False,
+        label='Attachments',
     )
     issue_type = forms.ChoiceField(required=False, label='Type')
     severity = forms.ChoiceField(required=False, label='Severity')
@@ -40,7 +62,12 @@ class IssueForm(forms.ModelForm):
         self.fields['severity'].choices = [(opt.slug, opt.name) for opt in IssueSeverity.objects.all()]
         self.fields['priority'].choices = [(opt.slug, opt.name) for opt in IssuePriority.objects.all()]
         self.fields['tags'].queryset = IssueTag.objects.all()
-        self.fields['due_date_preset'].queryset = DueDatePreset.objects.all()
+        self.fields['due_date_preset'].queryset = DueDatePreset.objects.all().order_by('order', 'days_from_today')
+        self.fields['status'].queryset = IssueStatus.objects.all().order_by('order', 'name')
+        self.fields['issue_type'].widget.attrs.update({'class': 'attribute-select', 'data-field-kind': 'issue_type'})
+        self.fields['severity'].widget.attrs.update({'class': 'attribute-select', 'data-field-kind': 'severity'})
+        self.fields['priority'].widget.attrs.update({'class': 'attribute-select', 'data-field-kind': 'priority'})
+        self.fields['status'].widget.attrs.update({'class': 'attribute-select', 'data-field-kind': 'status'})
 
     def save(self, commit=True):
         issue = super().save(commit=False)

@@ -1,0 +1,1770 @@
+openapi: 3.0.2
+info:
+  version: 1.0.0
+  title: Issue Tracker API
+  description: >
+    REST API for the **Issue Tracker** (Taiga clone) built for the ASW course at UPC.
+    The web application is available at https://projecte-asw1.onrender.com.
+
+
+    **Authentication**: All endpoints require an API key in the `Authorization` header.
+    Find your key on your profile page in the web application.
+
+servers:
+  - url: 'https://projecte-asw1.onrender.com/api'
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /:
+    get:
+      tags: [health]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user:
+                    type: string
+                    example: john
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/:
+    get:
+      tags: [users]
+      summary: List all users with their profiles
+      operationId: listUsers
+      responses:
+        "200":
+          description: Array of user profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/{username}/:
+    get:
+      tags: [users]
+      summary: Get a user's complete profile
+      operationId: getUserProfile
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: john
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [users]
+      summary: Edit own profile (bio and/or avatar)
+      operationId: updateUserProfile
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: john
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                bio:
+                  type: string
+                  example: 'Software developer based in Barcelona.'
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/:
+    get:
+      tags: [issues]
+      summary: List all issues
+      operationId: listIssues
+      parameters:
+        - name: q
+          in: query
+          description: Search in subject and description
+          required: false
+          schema:
+            type: string
+          example: login
+        - name: type
+          in: query
+          description: Filter by issue type slug (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [bug, question, enhancement]
+        - name: severity
+          in: query
+          description: Filter by severity slug (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [wishlist, minor, normal, important, critical]
+        - name: priority
+          in: query
+          description: Filter by priority slug (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [low, normal, high]
+        - name: status
+          in: query
+          description: Filter by status slug (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [new, in_progress, ready_for_test, needs_info, closed, rejected, postponed]
+        - name: assigned_to
+          in: query
+          description: Filter by assignee username (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: john
+        - name: created_by
+          in: query
+          description: Filter by creator username (repeatable for OR logic)
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: jane
+        - name: sort
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum: [id, subject, status, issue_type, severity, priority, assigned_to, modified_at]
+            default: modified_at
+        - name: order
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        "200":
+          description: Array of issues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueList'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [issues]
+      summary: Create a new issue
+      operationId: createIssue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCreateInput'
+      responses:
+        "201":
+          description: Issue created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /issues/bulk/:
+    post:
+      tags: [issues]
+      summary: Bulk insert issues
+      operationId: bulkInsertIssues
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueBulkInsertInput'
+      responses:
+        "201":
+          description: Issues created by bulk insert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueBulkInsertResult'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /issues/{issue_id}/:
+    get:
+      tags: [issues]
+      summary: Get detail of an issue
+      operationId: getIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Issue detail with nested data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [issues]
+      summary: Delete an issue
+      operationId: deleteIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "204":
+          description: Issue deleted successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [issues]
+      summary: Update an issue (only creator)
+      operationId: updateIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueUpdateInput'
+      responses:
+        "200":
+          description: Issue updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/status/:
+    post:
+      tags: [issues]
+      summary: Update the status of an issue
+      operationId: updateIssueStatus
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueStatusUpdate'
+      responses:
+        "200":
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 42
+                  status:
+                    type: string
+                    example: 'In progress'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/comments/:
+    get:
+      tags: [comments]
+      summary: List comments of an issue
+      operationId: listIssueComments
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Array of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [comments]
+      summary: Create a new comment on an issue
+      operationId: createIssueComment
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  example: 'I can reproduce this bug on iOS Safari.'
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /comments/{comment_id}/:
+    put:
+      tags: [comments]
+      summary: Update a comment (author only)
+      operationId: updateComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 7
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text:
+                  type: string
+                  example: 'Updated comment text after retesting.'
+      responses:
+        "200":
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [comments]
+      summary: Delete a comment (author only)
+      operationId: deleteComment
+      parameters:
+        - name: comment_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 7
+      responses:
+        "204":
+          description: Comment deleted successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/watchers/:
+    get:
+      tags: [issues]
+      summary: List watchers of an issue
+      operationId: listIssueWatchers
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Array of watchers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Watcher'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [issues]
+      summary: Add a watcher to an issue
+      operationId: addIssueWatcher
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id]
+              properties:
+                user_id:
+                  type: integer
+                  example: 5
+      responses:
+        "201":
+          description: Watcher added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Watcher'
+        "200":
+          description: User was already watching
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: 'Already watching.'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/watchers/{user_id}/:
+    delete:
+      tags: [issues]
+      summary: Remove a watcher from an issue
+      operationId: removeIssueWatcher
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 5
+      responses:
+        "204":
+          description: Watcher removed successfully
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/activities/:
+    get:
+      tags: [issues]
+      summary: List activities of an issue
+      operationId: listIssueActivities
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Array of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueActivity'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /statuses/:
+    get:
+      tags: [catalogs]
+      summary: List all statuses
+      operationId: listStatuses
+      responses:
+        "200":
+          description: Array of statuses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueStatus'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new status
+      operationId: createStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueStatusInput'
+      responses:
+        "201":
+          description: Status created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueStatus'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /statuses/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get a status by ID
+      operationId: getStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Status detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueStatus'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update a status
+      operationId: updateStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueStatusInput'
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueStatus'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete a status
+      operationId: deleteStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Status deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /types/:
+    get:
+      tags: [catalogs]
+      summary: List all issue types
+      operationId: listTypes
+      responses:
+        "200":
+          description: Array of issue types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueType'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new issue type
+      operationId: createType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueTypeInput'
+      responses:
+        "201":
+          description: Type created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueType'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /types/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get an issue type by ID
+      operationId: getType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Type detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueType'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update an issue type
+      operationId: updateType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueTypeInput'
+      responses:
+        "200":
+          description: Type updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueType'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete an issue type
+      operationId: deleteType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Type deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /severities/:
+    get:
+      tags: [catalogs]
+      summary: List all severities
+      operationId: listSeverities
+      responses:
+        "200":
+          description: Array of severities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueSeverity'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new severity
+      operationId: createSeverity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCatalogInput'
+      responses:
+        "201":
+          description: Severity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSeverity'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /severities/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get a severity by ID
+      operationId: getSeverity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Severity detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSeverity'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update a severity
+      operationId: updateSeverity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCatalogInput'
+      responses:
+        "200":
+          description: Severity updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueSeverity'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete a severity
+      operationId: deleteSeverity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Severity deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /priorities/:
+    get:
+      tags: [catalogs]
+      summary: List all priorities
+      operationId: listPriorities
+      responses:
+        "200":
+          description: Array of priorities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssuePriority'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new priority
+      operationId: createPriority
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCatalogInput'
+      responses:
+        "201":
+          description: Priority created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuePriority'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /priorities/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get a priority by ID
+      operationId: getPriority
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Priority detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuePriority'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update a priority
+      operationId: updatePriority
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCatalogInput'
+      responses:
+        "200":
+          description: Priority updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuePriority'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete a priority
+      operationId: deletePriority
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Priority deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /tags/:
+    get:
+      tags: [catalogs]
+      summary: List all tags
+      operationId: listTags
+      responses:
+        "200":
+          description: Array of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueTag'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [catalogs]
+      summary: Create a new tag
+      operationId: createTag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueTagInput'
+      responses:
+        "201":
+          description: Tag created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueTag'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+
+  /tags/{id}/:
+    get:
+      tags: [catalogs]
+      summary: Get a tag by ID
+      operationId: getTag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Tag detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueTag'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [catalogs]
+      summary: Update a tag
+      operationId: updateTag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueTagInput'
+      responses:
+        "200":
+          description: Tag updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueTag'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [catalogs]
+      summary: Delete a tag
+      operationId: deleteTag
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "204":
+          description: Tag deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/deadline/:
+    post:
+      tags: [issues]
+      summary: Set the deadline for an issue
+      operationId: setIssueDeadline
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deadline:
+                  type: string
+                  format: date
+                  description: "The deadline date (YYYY-MM-DD)."
+                  example: '2026-06-01'
+      responses:
+        "200":
+          description: Updated issue details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [issues]
+      summary: Remove the deadline for an issue
+      operationId: deleteIssueDeadline
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        "200":
+          description: Updated issue details (without deadline)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+  /issues/{issue_id}/assign/:
+    post:
+      tags: [issues]
+      summary: Assign or unassign an issue
+      operationId: assignIssue
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assigned_to:
+                  type: string
+                  nullable: true
+                  description: "Username of the assignee. Null or empty string to unassign."
+                  example: 'john'
+      responses:
+        "200":
+          description: Updated issue details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueDetail'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >
+        Your personal API key. Find it on your profile page in the web application.
+        Send the raw 64-character hex value — no prefix required.
+
+  responses:
+    Unauthorized:
+      description: 'Error: Unauthorized — API key missing or invalid'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResult'
+          examples:
+            error401:
+              value:
+                message: 'Invalid API key.'
+    Forbidden:
+      description: 'Error: Forbidden — you do not have permission for this action'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResult'
+          examples:
+            error403:
+              value:
+                message: 'You do not have permission to perform this action.'
+    NotFound:
+      description: 'Error: Not Found'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResult'
+          examples:
+            error404:
+              value:
+                message: "No resource with the given id found."
+    BadRequest:
+      description: 'Error: Bad Request'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResult'
+          examples:
+            error400:
+              value:
+                message: 'subject: This field is required.'
+
+  schemas:
+    ErrorResult:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: 'Invalid API key.'
+
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          example: john
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+
+    UserProfile:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        bio:
+          type: string
+          example: 'Software developer based in Barcelona.'
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+          example: 'https://projecte-asw1.onrender.com/media/avatars/john.jpg'
+
+    IssueStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'New'
+        slug:
+          type: string
+          example: 'new'
+        color:
+          type: string
+          example: '#83eede'
+        is_closed:
+          type: boolean
+          example: false
+
+    IssueUser:
+      type: object
+      properties:
+        username:
+          type: string
+          example: john
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Doe
+
+    IssueTag:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'backend'
+        slug:
+          type: string
+          example: 'backend'
+        color:
+          type: string
+          example: '#70728f'
+
+    IssueList:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        subject:
+          type: string
+          example: 'Login button not working on mobile'
+        status:
+          $ref: '#/components/schemas/IssueStatus'
+        issue_type:
+          type: string
+          example: 'bug'
+        severity:
+          type: string
+          example: 'critical'
+        priority:
+          type: string
+          example: 'high'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueTag'
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-06-01'
+        deadline_status:
+          type: string
+          nullable: true
+          enum: [red, orange, green]
+          example: 'orange'
+        assigned_to:
+          allOf:
+           - $ref: '#/components/schemas/IssueUser'
+          nullable: true
+        created_by:
+          $ref: '#/components/schemas/IssueUser'
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+        modified_at:
+          type: string
+          format: date-time
+          example: '2026-05-03T14:30:00Z'
+
+    IssueDetail:
+      allOf:
+        - $ref: '#/components/schemas/IssueList'
+        - type: object
+          properties:
+            description:
+              type: string
+              example: 'When tapping the login button on iOS Safari, nothing happens.'
+
+    Watcher:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 5
+        username:
+          type: string
+          example: john
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        issue_id:
+          type: integer
+          example: 42
+        author:
+          $ref: '#/components/schemas/IssueUser'
+        text:
+          type: string
+          example: 'I can reproduce this bug on iOS Safari.'
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+        modified_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+
+    IssueActivity:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 12
+        actor:
+          $ref: '#/components/schemas/IssueUser'
+        action:
+          type: string
+          example: 'added comment via API'
+        details:
+          type: string
+          example: 'I can reproduce this bug on iOS Safari.'
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
+
+    IssueBulkInsertInput:
+      type: object
+      required: [issues_text]
+      properties:
+        issues_text:
+          type: string
+          description: >
+            One issue per line using format `Subject | Description`.
+            Description is optional.
+          example: |
+            Login button not working | Tap on mobile Safari does nothing
+            Error when uploading avatar
+        status_id:
+          type: integer
+          nullable: true
+          description: >
+            Optional status ID to apply to all created issues.
+            If omitted, the default status is used.
+          example: 1
+
+    IssueBulkInsertResult:
+      type: object
+      properties:
+        created_count:
+          type: integer
+          example: 2
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueList'
+
+    IssueStatusUpdate:
+      type: object
+      required: [status_id]
+      properties:
+        status_id:
+          type: integer
+          example: 3
+
+    IssueStatusInput:
+      type: object
+      required: [name, slug, color]
+      properties:
+        name:
+          type: string
+          example: 'In Review'
+        slug:
+          type: string
+          example: 'in_review'
+        color:
+          type: string
+          example: '#4c9aff'
+        is_closed:
+          type: boolean
+          example: false
+        order:
+          type: integer
+          example: 3
+
+    IssueType:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'Bug'
+        slug:
+          type: string
+          example: 'bug'
+        color:
+          type: string
+          example: '#e44057'
+        order:
+          type: integer
+          example: 0
+
+    IssueTypeInput:
+      type: object
+      required: [name, slug, color]
+      properties:
+        name:
+          type: string
+          example: 'Bug'
+        slug:
+          type: string
+          example: 'bug'
+        color:
+          type: string
+          example: '#e44057'
+        order:
+          type: integer
+          example: 0
+
+    IssueSeverity:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'Critical'
+        slug:
+          type: string
+          example: 'critical'
+        color:
+          type: string
+          example: '#b91c1c'
+        order:
+          type: integer
+          example: 4
+
+    IssuePriority:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'High'
+        slug:
+          type: string
+          example: 'high'
+        color:
+          type: string
+          example: '#ef4444'
+        order:
+          type: integer
+          example: 2
+
+    IssueCatalogInput:
+      type: object
+      required: [name, slug, color]
+      properties:
+        name:
+          type: string
+          example: 'High'
+        slug:
+          type: string
+          example: 'high'
+        color:
+          type: string
+          example: '#ef4444'
+        order:
+          type: integer
+          example: 2
+
+    IssueTagInput:
+      type: object
+      required: [name, slug, color]
+      properties:
+        name:
+          type: string
+          example: 'backend'
+        slug:
+          type: string
+          example: 'backend'
+        color:
+          type: string
+          example: '#70728f'
+    IssueCreateInput:
+      type: object
+      required: [subject, description, status_id, issue_type, severity_id, priority_id]
+      properties:
+        subject:
+          type: string
+          example: 'Login bug'
+        description:
+          type: string
+          example: 'Login button does not respond on iOS Safari.'
+        status_id:
+          type: integer
+          example: 1
+        issue_type:
+          type: string
+          example: 'bug'
+        severity:
+          type: string
+          example: 'normal'
+        priority:
+          type: string
+          example: 'normal'
+        tags:
+          type: array
+          items:
+            type: integer
+          example: []
+        assigned_to_id:
+          type: integer
+          nullable: true
+          example: 5
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-06-01'
+    IssueUpdateInput:
+      type: object
+      properties:
+        subject:
+          type: string
+          example: 'Updated subject'
+        description:
+          type: string
+          example: 'Updated description'
+        status_id:
+          type: integer
+          example: 2
+        issue_type:
+          type: string
+          example: 'bug'
+        severity:
+          type: string
+          example: 'Normal'
+        priority:
+          type: string
+          example: 'Normal'
+        tags:
+          type: array
+          items:
+            type: string
+          example: []
+        assigned_to_id:
+          type: integer
+          nullable: true
+          example: 5
+        deadline:
+          type: string
+          format: date
+          nullable: true
+          example: '2026-06-10'

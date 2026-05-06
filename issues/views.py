@@ -1,8 +1,11 @@
+import datetime
+
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q, Max
 from django.core.exceptions import PermissionDenied
+from django.utils import timezone
 from .models import Attachment, Comment, Issue, IssueActivity, Watcher
 from .models import DueDatePreset, IssuePriority, IssueSeverity, IssueTag, IssueType
 from .forms import (
@@ -47,6 +50,30 @@ FILTER_LABELS = {
     'assigned_to': 'Assigned to',
     'created_by': 'Created by',
 }
+
+
+def _ensure_issue_catalog_defaults():
+    for item in IssueStatus.get_default_statuses():
+        IssueStatus.objects.get_or_create(slug=item['slug'], defaults=item)
+    for item in IssueType.get_defaults():
+        IssueType.objects.get_or_create(slug=item['slug'], defaults=item)
+    for item in IssueSeverity.get_defaults():
+        IssueSeverity.objects.get_or_create(slug=item['slug'], defaults=item)
+    for item in IssuePriority.get_defaults():
+        IssuePriority.objects.get_or_create(slug=item['slug'], defaults=item)
+    for item in DueDatePreset.get_defaults():
+        DueDatePreset.objects.get_or_create(name=item['name'], defaults=item)
+
+
+def _issue_form_catalog_context():
+    _ensure_issue_catalog_defaults()
+    return {
+        'status_options': IssueStatus.objects.all().order_by('order', 'name'),
+        'issue_type_options': IssueType.objects.all(),
+        'severity_options': IssueSeverity.objects.all(),
+        'priority_options': IssuePriority.objects.all(),
+        'due_date_presets': DueDatePreset.objects.all().order_by('order', 'days_from_today'),
+    }
 
 
 def _add_activity(issue, actor, action, details=''):
@@ -121,41 +148,62 @@ def issue_list(request):
 
 @login_required
 def issue_new(request):
+    _ensure_issue_catalog_defaults()
     if request.method == 'POST':
-        form = IssueForm(request.POST)
+        form = IssueForm(request.POST, request.FILES)
         if form.is_valid():
             issue = form.save(commit=False)
             issue.created_by = request.user
             issue.save()
+            form.save_m2m()
+            for uploaded_file in form.cleaned_data.get('attachments', []):
+                attachment = Attachment.objects.create(
+                    issue=issue,
+                    uploaded_by=request.user,
+                    file=uploaded_file,
+                )
+                _add_activity(issue, request.user, 'added attachment', attachment.file.name)
             _add_activity(issue, request.user, 'created issue', issue.subject)
             return redirect('issue_list')
     else:
         form = IssueForm()
-    return render(request, 'issues/new.html', {'form': form})
+    context = {'form': form}
+    context.update(_issue_form_catalog_context())
+    return render(request, 'issues/new.html', context)
 
 
 @login_required
 def issue_edit(request, issue_id):
+    _ensure_issue_catalog_defaults()
     issue = get_object_or_404(Issue, pk=issue_id)
     if issue.created_by_id != request.user.id:
         raise PermissionDenied
 
     if request.method == 'POST':
-        form = IssueForm(request.POST, instance=issue)
+        form = IssueForm(request.POST, request.FILES, instance=issue)
         if form.is_valid():
             updated_issue = form.save()
+            for uploaded_file in form.cleaned_data.get('attachments', []):
+                attachment = Attachment.objects.create(
+                    issue=updated_issue,
+                    uploaded_by=request.user,
+                    file=uploaded_file,
+                )
+                _add_activity(updated_issue, request.user, 'added attachment', attachment.file.name)
             _add_activity(updated_issue, request.user, 'edited issue', updated_issue.subject)
             return redirect('issue_detail', issue_id=updated_issue.id)
     else:
         form = IssueForm(instance=issue)
 
+    context = {
+        'form': form,
+        'issue': issue,
+    }
+    context.update(_issue_form_catalog_context())
     return render(
         request,
         'issues/edit.html',
-        {
-            'form': form,
-            'issue': issue,
-        },
+        context,
     )
 
 
@@ -213,6 +261,7 @@ def issue_delete(request, issue_id):
 
 @login_required
 def issue_detail(request, issue_id):
+    _ensure_issue_catalog_defaults()
     issue = get_object_or_404(
         Issue.objects.select_related('created_by', 'assigned_to')
                      .prefetch_related('attachments', 'comments__author', 'watchers__user'),
@@ -237,6 +286,7 @@ def issue_detail(request, issue_id):
             'is_watching': is_watching,
             'watcher_list': watcher_list,
             'activities': activities,
+            'due_date_presets': DueDatePreset.objects.all().order_by('order', 'days_from_today'),
         },
     )
 
@@ -376,16 +426,7 @@ def comment_delete(request, comment_id):
 @login_required
 def settings_view(request):
     """Main settings page — lists all configurable issue catalogs."""
-    for item in IssueStatus.get_default_statuses():
-        IssueStatus.objects.get_or_create(slug=item['slug'], defaults=item)
-    for item in IssueType.get_defaults():
-        IssueType.objects.get_or_create(slug=item['slug'], defaults=item)
-    for item in IssueSeverity.get_defaults():
-        IssueSeverity.objects.get_or_create(slug=item['slug'], defaults=item)
-    for item in IssuePriority.get_defaults():
-        IssuePriority.objects.get_or_create(slug=item['slug'], defaults=item)
-    for item in DueDatePreset.get_defaults():
-        DueDatePreset.objects.get_or_create(name=item['name'], defaults=item)
+    _ensure_issue_catalog_defaults()
 
     context = {
         'statuses': IssueStatus.objects.all(),
@@ -539,9 +580,16 @@ def catalog_delete(request, catalog, pk):
 def issue_set_deadline(request, issue_id):
     issue = get_object_or_404(Issue, pk=issue_id)
     if request.method == 'POST':
+        preset_days = request.POST.get('preset_days', '').strip()
+        if preset_days:
+            try:
+                issue.deadline = timezone.now().date() + datetime.timedelta(days=int(preset_days))
+                issue.save(update_fields=['deadline'])
+                return redirect('issue_detail', issue_id=issue_id)
+            except (TypeError, ValueError):
+                pass
         deadline_str = request.POST.get('deadline', '').strip()
         if deadline_str:
-            import datetime
             try:
                 issue.deadline = datetime.date.fromisoformat(deadline_str)
             except ValueError:
