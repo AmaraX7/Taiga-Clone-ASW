@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from issues.models import Comment, Issue, IssueActivity, IssueStatus, IssueTag, Watcher
+from issues.models import Comment, Issue, IssueActivity, IssueStatus, IssueTag, Watcher, Attachment
 
 
 class IssueStatusSerializer(serializers.ModelSerializer):
@@ -87,3 +87,12 @@ class IssueActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = IssueActivity
         fields = ['id', 'actor', 'action', 'details', 'created_at']
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    uploaded_by = serializers.CharField(source='uploaded_by.username', read_only=True)
+    issue_id = serializers.IntegerField(source='issue.id', read_only=True)
+
+    class Meta:
+        model = Attachment
+        fields = ['id', 'issue_id', 'uploaded_by', 'file', 'created_at']
+        read_only_fields = ['id', 'issue_id', 'uploaded_by', 'created_at']
