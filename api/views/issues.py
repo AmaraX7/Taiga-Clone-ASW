@@ -4,12 +4,14 @@ import datetime
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from issues.models import Comment, Issue, IssueActivity, Watcher, Attachment
+
+from issues.models import Comment, Issue, IssueActivity, IssueStatus, Watcher, Attachment
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.serializers.issues import (
     CommentSerializer,
+    IssueBulkInsertSerializer,
     IssueActivitySerializer,
     IssueDetailSerializer,
     IssueListSerializer,
@@ -72,6 +74,68 @@ class IssueListView(APIView):
 
         serializer = IssueListSerializer(issues, many=True)
         return Response(serializer.data)
+    def post(self, request):
+        serializer = IssueDetailSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        issue = serializer.save(created_by=request.user)
+        
+        _add_activity(issue, request.user, 'created issue via API', issue.subject)
+        
+        return Response(
+            IssueDetailSerializer(issue).data,
+            status=status.HTTP_201_CREATED
+        )
+
+@api_view(['POST'])
+def issue_bulk_insert(request):
+    serializer = IssueBulkInsertSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    issues_text = serializer.validated_data['issues_text']
+    selected_status = serializer.validated_data.get('status_id')
+    default_status = selected_status or IssueStatus.objects.order_by('order', 'name').first()
+
+    if not default_status:
+        return Response(
+            {'message': 'No statuses available to create issues.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    created_issues = []
+    for raw_line in issues_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        if '|' in line:
+            subject, description = [part.strip() for part in line.split('|', 1)]
+        else:
+            subject, description = line, ''
+
+        if not subject:
+            continue
+
+        issue = Issue.objects.create(
+            subject=subject,
+            description=description,
+            status=default_status,
+            created_by=request.user,
+        )
+        _add_activity(issue, request.user, 'created issue (bulk) via API', issue.subject)
+        created_issues.append(issue)
+
+    serializer = IssueListSerializer(created_issues, many=True)
+    return Response(
+        {
+            'created_count': len(created_issues),
+            'issues': serializer.data,
+        },
+        status=status.HTTP_201_CREATED,
+    )
 
 
 class IssueDeadlineView(APIView):
@@ -142,7 +206,7 @@ class IssueAssignView(APIView):
         serializer = IssueDetailSerializer(issue)
         return Response(serializer.data)
 
-@api_view(['GET', 'DELETE'])
+@api_view(['GET', 'DELETE', 'PUT'])
 def issue_delete(request, issue_id):
     issue = get_object_or_404(
         Issue.objects.select_related('status', 'assigned_to', 'created_by')
@@ -159,6 +223,22 @@ def issue_delete(request, issue_id):
             {'message': 'You do not have permission to delete this issue.'},
             status=status.HTTP_403_FORBIDDEN
         )
+    
+    if request.method == 'PUT':
+        serializer = IssueDetailSerializer(issue, data=request.data, partial=True)
+        
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated_issue = serializer.save()
+        
+        _add_activity(updated_issue, request.user, 'updated issue via API', updated_issue.subject)
+        
+        return Response(
+            IssueDetailSerializer(updated_issue).data,
+            status=status.HTTP_200_OK
+        )
+    
     issue.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 

@@ -1,0 +1,106 @@
+MAPA MENTAL - PROJECTE-ASW (TAIGA CLONE)
+========================================
+
+1) ARQUITECTURA GENERAL
+-----------------------
+- config/: núcleo Django (settings, urls, wsgi/asgi)
+- issues/: app principal (gestión de incidencias)
+- accounts/: perfiles de usuario
+- api/: capa REST (base lista, aún corta)
+- templates/: HTML por app
+- static/: CSS/assets
+- media/: ficheros subidos (adjuntos, avatares)
+
+2) ROUTING PRINCIPAL
+--------------------
+Archivo: config/urls.py
+- /admin/      -> Django admin
+- /api/        -> include(api.urls)
+- /accounts/   -> allauth (login/oauth)
+- /users/      -> perfiles (accounts.urls)
+- /            -> include(issues.urls)
+
+3) MODELO DE DATOS (CORE)
+-------------------------
+Archivo: issues/models.py
+- IssueStatus(name, slug, color, is_closed, order)
+- IssueType(name, slug, color, order)
+- IssueSeverity(name, slug, color, order)
+- IssuePriority(name, slug, color, order)
+- IssueTag(name, slug, color)
+- DueDatePreset(name, days_from_today, order)
+
+Entidad principal:
+- Issue(subject, description, status, issue_type, severity, priority, tags, deadline,
+       assigned_to, created_by, created_at, modified_at)
+
+Relaciones alrededor de Issue:
+- Comment(issue, author, text, created_at, modified_at)
+- Attachment(issue, uploaded_by, file, created_at)
+- Watcher(issue, user, created_at) [único por issue+user]
+- IssueActivity(issue, actor, action, details, created_at)
+
+4) FLUJOS CLAVE
+---------------
+A) Perfil y autenticación (accounts/views.py)
+- profile_view(username): tabs de asignadas, watched y comentarios
+- profile_edit(username): bio/avatar
+
+B) CRUD de incidencias (issues/views.py + issues/urls.py)
+- issue_list, issue_new, issue_detail, issue_edit, issue_delete
+- issue_assign, issue_update_status
+- issue_set_deadline
+- issue_bulk_insert
+
+C) Colaboración
+- comment_add, comment_edit, comment_delete
+- attachment_add, attachment_delete
+- watcher_add, watcher_remove
+
+D) Catálogos y settings internos
+- settings_view
+- status_create/edit/delete/reorder
+- catalog_create/edit/delete (types, severities, priorities, tags, due-dates)
+
+5) API (ESTADO ACTUAL)
+----------------------
+Archivos: api/urls.py, api/authentication.py
+- Endpoint implementado: GET /api/ (health)
+- Autenticación preparada: ApiKeyAuthentication (Authorization header)
+- Falta expandir serializers/views/endpoints funcionales
+
+6) TESTS (LO QUE HAY)
+---------------------
+Archivo: issues/tests.py
+- Cubierto: asignación, adjuntos, comentarios, edición/borrado, permisos básicos, bulk insert,
+           render de actividad en detalle.
+
+Archivo: accounts/tests.py
+- Prácticamente vacío (deuda técnica).
+
+7) ARCHIVOS MÁS IMPORTANTES PARA LA REVIEW
+-------------------------------------------
+1. issues/views.py
+2. issues/models.py
+3. issues/forms.py
+4. issues/urls.py
+5. issues/tests.py
+6. accounts/views.py
+7. accounts/models.py
+8. config/settings.py
+9. config/urls.py
+10. api/authentication.py
+
+8) PUNTOS DÉBILES / DEUDA TÉCNICA
+---------------------------------
+- API aún mínima (solo health + auth base).
+- accounts/tests.py sin cobertura real.
+- Lógica concentrada en issues/views.py (archivo grande).
+- Algunas validaciones y mensajes de permisos podrían mejorarse.
+
+9) RESUMEN EXPRESS (30 SEGUNDOS)
+--------------------------------
+"El core está en issues: Issue + comentarios + adjuntos + watchers + actividad.
+Accounts gestiona perfil y allauth. Config enruta todo. La API está preparada
+pero poco desarrollada. Tenemos tests razonables en issues, pero faltan en accounts
+(y ampliar cobertura en API/catálogos)."

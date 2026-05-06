@@ -212,3 +212,108 @@ class WatchersAndActivitiesApiTests(TestCase):
         self.assertEqual(len(response.json()), 1)
         self.assertEqual(response.json()[0]['action'], 'updated status via API')
         self.assertEqual(response.json()[0]['actor']['username'], self.owner.username)
+
+
+class IssueBulkInsertApiTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='bulk-user')
+        self.default_status, _ = IssueStatus.objects.get_or_create(
+            slug='new',
+            defaults={
+                'name': 'New',
+                'color': '#83eede',
+                'is_closed': False,
+                'order': 0,
+            },
+        )
+        self.in_progress_status, _ = IssueStatus.objects.get_or_create(
+            slug='in_progress',
+            defaults={
+                'name': 'In progress',
+                'color': '#e2b93b',
+                'is_closed': False,
+                'order': 1,
+            },
+        )
+        self.auth_headers = {'HTTP_AUTHORIZATION': self.user.profile.api_key}
+        self.url = '/api/issues/bulk/'
+
+    def test_bulk_insert_creates_multiple_issues(self):
+        payload = {
+            'issues_text': (
+                'First issue | First description\n'
+                'Second issue\n'
+                '\n'
+                '| should be ignored\n'
+                'Third issue | Third description'
+            ),
+            'status_id': self.in_progress_status.id,
+        }
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type='application/json',
+            **self.auth_headers,
+        )
+
+        self.assertEqual(response.status_code, 201)
+        body = response.json()
+        self.assertEqual(body['created_count'], 3)
+        self.assertEqual(len(body['issues']), 3)
+        self.assertEqual(
+            [item['subject'] for item in body['issues']],
+            ['First issue', 'Second issue', 'Third issue'],
+        )
+
+        created_issues = Issue.objects.filter(created_by=self.user, status=self.in_progress_status)
+        self.assertEqual(created_issues.count(), 3)
+        self.assertEqual(
+            IssueActivity.objects.filter(
+                actor=self.user,
+                action='created issue (bulk) via API',
+            ).count(),
+            3,
+        )
+
+    def test_bulk_insert_uses_default_status_when_missing(self):
+        payload = {'issues_text': 'Single bulk issue | Description'}
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type='application/json',
+            **self.auth_headers,
+        )
+
+        self.assertEqual(response.status_code, 201)
+        issue = Issue.objects.get(subject='Single bulk issue', created_by=self.user)
+        expected_default_status = IssueStatus.objects.order_by('order', 'name').first()
+        self.assertEqual(issue.status, expected_default_status)
+
+    def test_bulk_insert_rejects_invalid_status_id(self):
+        payload = {'issues_text': 'Invalid status issue', 'status_id': 999999}
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type='application/json',
+            **self.auth_headers,
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('status_id', response.json())
+        self.assertFalse(Issue.objects.filter(subject='Invalid status issue').exists())
+
+    def test_bulk_insert_rejects_blank_issues_text(self):
+        payload = {'issues_text': '   \n  '}
+
+        response = self.client.post(
+            self.url,
+            data=json.dumps(payload),
+            content_type='application/json',
+            **self.auth_headers,
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('issues_text', response.json())

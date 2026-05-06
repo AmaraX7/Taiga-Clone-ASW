@@ -43,11 +43,16 @@ class IssueDetailSerializer(serializers.ModelSerializer):
     created_by = IssueUserSerializer(read_only=True)
     tags = IssueTagSerializer(many=True, read_only=True)
     deadline_status = serializers.ReadOnlyField()
+    status_id = serializers.PrimaryKeyRelatedField (
+    queryset=IssueStatus.objects.all(),
+    source='status',
+    write_only=True
+)
 
     class Meta:
         model = Issue
         fields = [
-            'id', 'subject', 'description', 'status', 'issue_type', 'severity', 'priority',
+            'id', 'status_id', 'subject', 'description', 'status', 'issue_type', 'severity', 'priority',
             'tags', 'deadline', 'deadline_status',
             'assigned_to', 'created_by', 'created_at', 'modified_at',
         ]
@@ -70,6 +75,24 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'issue_id', 'author', 'text', 'created_at', 'modified_at']
         read_only_fields = ['id', 'issue_id', 'author', 'created_at', 'modified_at']
+
+
+class IssueBulkInsertSerializer(serializers.Serializer):
+    issues_text = serializers.CharField()
+    status_id = serializers.IntegerField(required=False, allow_null=True)
+
+    def validate_issues_text(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("This field may not be blank.")
+        return value
+
+    def validate_status_id(self, value):
+        if value is None:
+            return None
+        try:
+            return IssueStatus.objects.get(pk=value)
+        except IssueStatus.DoesNotExist:
+            raise serializers.ValidationError("Status not found.")
 
 
 class IssueStatusUpdateSerializer(serializers.Serializer):

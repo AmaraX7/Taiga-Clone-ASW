@@ -13,6 +13,7 @@ from api.views.catalogs import (
 )
 from api.views.issues import (
     IssueAssignView,
+    issue_bulk_insert,
     IssueDeadlineView,
     IssueListView,
     comment_detail,
@@ -55,6 +56,7 @@ urlpatterns = [
 
     # Issues
     path('issues/', IssueListView.as_view(), name='issue-list'),
+    path('issues/bulk/', issue_bulk_insert, name='issue-bulk-insert'),
     path('issues/<int:issue_id>/', issue_delete, name='issue-delete'),
     path('issues/<int:issue_id>/deadline/', IssueDeadlineView.as_view(), name='issue-deadline'),
     path('issues/<int:issue_id>/assign/', IssueAssignView.as_view(), name='issue-assign'),
