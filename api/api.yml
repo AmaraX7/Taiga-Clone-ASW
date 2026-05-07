@@ -525,11 +525,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [user_id]
+              required: [username]
               properties:
-                user_id:
-                  type: integer
-                  example: 5
+                username:
+                  type: string
+                  example: john
       responses:
         "201":
           description: Watcher added
@@ -554,7 +554,7 @@ paths:
         "404":
           $ref: '#/components/responses/NotFound'
 
-  /issues/{issue_id}/watchers/{user_id}/:
+  /issues/{issue_id}/watchers/{username}/:
     delete:
       tags: [issues]
       summary: Remove a watcher from an issue
@@ -566,12 +566,12 @@ paths:
           schema:
             type: integer
           example: 42
-        - name: user_id
+        - name: username
           in: path
           required: true
           schema:
-            type: integer
-          example: 5
+            type: string
+          example: john
       responses:
         "204":
           description: Watcher removed successfully
@@ -1538,9 +1538,6 @@ components:
     Watcher:
       type: object
       properties:
-        user_id:
-          type: integer
-          example: 5
         username:
           type: string
           example: john
