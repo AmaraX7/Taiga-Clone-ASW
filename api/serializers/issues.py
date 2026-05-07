@@ -59,12 +59,11 @@ class IssueDetailSerializer(serializers.ModelSerializer):
 
 
 class WatcherSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(source='user.id', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Watcher
-        fields = ['user_id', 'username', 'created_at']
+        fields = ['username', 'created_at']
 
 
 class CommentSerializer(serializers.ModelSerializer):

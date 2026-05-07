@@ -207,7 +207,7 @@ class IssueAssignView(APIView):
         return Response(serializer.data)
 
 @api_view(['GET', 'DELETE', 'PUT'])
-def issue_delete(request, issue_id):
+def issue_detail(request, issue_id):
     issue = get_object_or_404(
         Issue.objects.select_related('status', 'assigned_to', 'created_by')
                      .prefetch_related('tags'),
@@ -218,27 +218,24 @@ def issue_delete(request, issue_id):
         serializer = IssueDetailSerializer(issue)
         return Response(serializer.data)
 
+    if request.method == 'PUT':
+        if issue.created_by != request.user:
+            return Response(
+                {'message': 'You do not have permission to update this issue.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = IssueDetailSerializer(issue, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        updated_issue = serializer.save()
+        _add_activity(updated_issue, request.user, 'updated issue via API', updated_issue.subject)
+        return Response(IssueDetailSerializer(updated_issue).data, status=status.HTTP_200_OK)
+
     if issue.created_by != request.user:
         return Response(
             {'message': 'You do not have permission to delete this issue.'},
             status=status.HTTP_403_FORBIDDEN
         )
-    
-    if request.method == 'PUT':
-        serializer = IssueDetailSerializer(issue, data=request.data, partial=True)
-        
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        updated_issue = serializer.save()
-        
-        _add_activity(updated_issue, request.user, 'updated issue via API', updated_issue.subject)
-        
-        return Response(
-            IssueDetailSerializer(updated_issue).data,
-            status=status.HTTP_200_OK
-        )
-    
     issue.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -267,11 +264,11 @@ def issue_watchers(request, issue_id):
         serializer = WatcherSerializer(watchers, many=True)
         return Response(serializer.data)
 
-    user_id = request.data.get('user_id')
-    if not user_id:
-        return Response({'error': 'user_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    username = request.data.get('username')
+    if not username:
+        return Response({'message': 'username is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = get_object_or_404(User, pk=user_id)
+    user = get_object_or_404(User, username=username)
     watcher, created = Watcher.objects.get_or_create(issue=issue, user=user)
     if created:
         _add_activity(issue, request.user, 'added watcher via API', user.username)
@@ -323,14 +320,13 @@ def comment_detail(request, comment_id):
 
 
 @api_view(['DELETE'])
-def issue_watcher_remove(request, issue_id, user_id):
+def issue_watcher_remove(request, issue_id, username):
     issue = get_object_or_404(Issue, pk=issue_id)
-    deleted, _ = Watcher.objects.filter(issue=issue, user_id=user_id).delete()
+    deleted, _ = Watcher.objects.filter(issue=issue, user__username=username).delete()
     if deleted:
-        user = User.objects.filter(pk=user_id).first()
-        _add_activity(issue, request.user, 'removed watcher via API', user.username if user else str(user_id))
+        _add_activity(issue, request.user, 'removed watcher via API', username)
         return Response(status=status.HTTP_204_NO_CONTENT)
-    return Response({'error': 'Watcher not found.'}, status=status.HTTP_404_NOT_FOUND)
+    return Response({'message': 'Watcher not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 def issue_activities(request, issue_id):
