@@ -175,23 +175,22 @@ class WatchersAndActivitiesApiTests(TestCase):
     def test_add_and_list_watchers(self):
         add_response = self.client.post(
             self.watchers_url,
-            data=json.dumps({'user_id': self.watcher_user.id}),
+            data=json.dumps({'username': self.watcher_user.username}),
             content_type='application/json',
             **self.auth_headers,
         )
 
         self.assertEqual(add_response.status_code, 201)
-        self.assertEqual(add_response.json()['user_id'], self.watcher_user.id)
         self.assertEqual(add_response.json()['username'], self.watcher_user.username)
 
         list_response = self.client.get(self.watchers_url, **self.auth_headers)
         self.assertEqual(list_response.status_code, 200)
         self.assertEqual(len(list_response.json()), 1)
-        self.assertEqual(list_response.json()[0]['user_id'], self.watcher_user.id)
+        self.assertEqual(list_response.json()[0]['username'], self.watcher_user.username)
 
     def test_remove_watcher(self):
         Watcher.objects.create(issue=self.issue, user=self.watcher_user)
-        remove_url = f'/api/issues/{self.issue.id}/watchers/{self.watcher_user.id}/'
+        remove_url = f'/api/issues/{self.issue.id}/watchers/{self.watcher_user.username}/'
 
         response = self.client.delete(remove_url, **self.auth_headers)
 
