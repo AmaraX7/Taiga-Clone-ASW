@@ -132,73 +132,46 @@ paths:
           required: false
           schema:
             type: string
-          example: login
         - name: type
           in: query
-          description: Filter by issue type slug (repeatable for OR logic)
+          description: Filter by issue type
           required: false
-          style: form
-          explode: true
           schema:
-            type: array
-            items:
-              type: string
-              enum: [bug, question, enhancement]
+            type: string
+            enum: [bug, question, enhancement]
         - name: severity
           in: query
-          description: Filter by severity slug (repeatable for OR logic)
+          description: Filter by severity
           required: false
-          style: form
-          explode: true
           schema:
-            type: array
-            items:
-              type: string
-              enum: [wishlist, minor, normal, important, critical]
+            type: string
+            enum: [wishlist, minor, normal, important, critical]
         - name: priority
           in: query
-          description: Filter by priority slug (repeatable for OR logic)
+          description: Filter by priority
           required: false
-          style: form
-          explode: true
           schema:
-            type: array
-            items:
-              type: string
-              enum: [low, normal, high]
+            type: string
+            enum: [low, normal, high]
         - name: status
           in: query
-          description: Filter by status slug (repeatable for OR logic)
+          description: Filter by status
           required: false
-          style: form
-          explode: true
           schema:
-            type: array
-            items:
-              type: string
-              enum: [new, in_progress, ready_for_test, needs_info, closed, rejected, postponed]
+            type: string
+            enum: [new, in_progress, ready_for_test, needs_info, closed, rejected, postponed]
         - name: assigned_to
           in: query
-          description: Filter by assignee username (repeatable for OR logic)
+          description: Filter by assignee username
           required: false
-          style: form
-          explode: true
           schema:
-            type: array
-            items:
-              type: string
-          example: john
+            type: string
         - name: created_by
           in: query
-          description: Filter by creator username (repeatable for OR logic)
+          description: Filter by creator username
           required: false
-          style: form
-          explode: true
           schema:
-            type: array
-            items:
-              type: string
-          example: jane
+            type: string
         - name: sort
           in: query
           description: Field to sort by
@@ -1783,7 +1756,7 @@ components:
           example: '#70728f'
     IssueCreateInput:
       type: object
-      required: [subject, description, status_id, issue_type, severity_id, priority_id]
+      required: [subject, status_id, issue_type, severity, priority]
       properties:
         subject:
           type: string
@@ -1796,22 +1769,16 @@ components:
           example: 1
         issue_type:
           type: string
+          enum: [bug, question, enhancement]
           example: 'bug'
         severity:
           type: string
+          enum: [wishlist, minor, normal, important, critical]
           example: 'normal'
         priority:
           type: string
+          enum: [low, normal, high]
           example: 'normal'
-        tags:
-          type: array
-          items:
-            type: integer
-          example: []
-        assigned_to_id:
-          type: integer
-          nullable: true
-          example: 5
         deadline:
           type: string
           format: date
@@ -1852,3 +1819,23 @@ components:
           format: date
           nullable: true
           example: '2026-06-10'
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        issue_id:
+          type: integer
+          example: 42
+        uploaded_by:
+          type: string
+          example: john
+        file:
+          type: string
+          format: uri
+          example: 'https://projecte-asw1.onrender.com/media/issues/attachments/file.pdf'
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-05-01T10:00:00Z'
