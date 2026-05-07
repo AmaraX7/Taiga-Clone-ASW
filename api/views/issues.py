@@ -370,13 +370,10 @@ def attachment_delete(request, attachment_id):
     issue = attachment.issue
     filename = attachment.file.name
 
-    file_path = attachment.file.path
+    if attachment.file:
+        attachment.file.delete(save=False)
 
     attachment.delete()
-
-    import os
-    if os.path.isfile(file_path):
-        os.remove(file_path)
 
     _add_activity(issue, request.user, 'deleted attachment via API', filename)
 
