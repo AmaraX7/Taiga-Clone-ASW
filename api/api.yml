@@ -56,6 +56,49 @@ paths:
         "401":
           $ref: '#/components/responses/Unauthorized'
 
+  /users/{username}/comments/:
+    get:
+      tags: [users]
+      summary: List all comments made by a user
+      operationId: listUserComments
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: john
+      responses:
+        "200":
+          description: Array of comments with issue context
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    issue_id:
+                      type: integer
+                    issue_subject:
+                      type: string
+                    author:
+                      $ref: '#/components/schemas/IssueUser'
+                    text:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+                    modified_at:
+                      type: string
+                      format: date-time
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+
   /users/{username}/:
     get:
       tags: [users]
@@ -169,6 +212,12 @@ paths:
         - name: created_by
           in: query
           description: Filter by creator username
+          required: false
+          schema:
+            type: string
+        - name: watched_by
+          in: query
+          description: Filter by watcher username
           required: false
           schema:
             type: string

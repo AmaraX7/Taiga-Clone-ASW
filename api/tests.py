@@ -24,7 +24,7 @@ class IssueCommentsApiTests(TestCase):
             status=self.status,
             created_by=self.user,
         )
-        self.auth_headers = {'HTTP_AUTHORIZATION': self.user.profile.api_key}
+        self.auth_headers = {'HTTP_AUTHORIZATION': f'Api-Key {self.user.profile.api_key}'}
         self.url = f'/api/issues/{self.issue.id}/comments/'
 
     def test_list_issue_comments(self):
@@ -94,8 +94,8 @@ class CommentDetailApiTests(TestCase):
             text='Original API comment',
         )
         self.url = f'/api/comments/{self.comment.id}/'
-        self.author_headers = {'HTTP_AUTHORIZATION': self.author.profile.api_key}
-        self.other_headers = {'HTTP_AUTHORIZATION': self.other_user.profile.api_key}
+        self.author_headers = {'HTTP_AUTHORIZATION': f'Api-Key {self.author.profile.api_key}'}
+        self.other_headers = {'HTTP_AUTHORIZATION': f'Api-Key {self.other_user.profile.api_key}'}
 
     def test_update_comment_as_author(self):
         response = self.client.put(
@@ -168,7 +168,7 @@ class WatchersAndActivitiesApiTests(TestCase):
             status=self.status,
             created_by=self.owner,
         )
-        self.auth_headers = {'HTTP_AUTHORIZATION': self.owner.profile.api_key}
+        self.auth_headers = {'HTTP_AUTHORIZATION': f'Api-Key {self.owner.profile.api_key}'}
         self.watchers_url = f'/api/issues/{self.issue.id}/watchers/'
         self.activities_url = f'/api/issues/{self.issue.id}/activities/'
 
@@ -234,7 +234,7 @@ class IssueBulkInsertApiTests(TestCase):
                 'order': 1,
             },
         )
-        self.auth_headers = {'HTTP_AUTHORIZATION': self.user.profile.api_key}
+        self.auth_headers = {'HTTP_AUTHORIZATION': f'Api-Key {self.user.profile.api_key}'}
         self.url = '/api/issues/bulk/'
 
     def test_bulk_insert_creates_multiple_issues(self):
