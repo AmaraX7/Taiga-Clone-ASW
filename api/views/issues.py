@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
-from issues.models import Comment, Issue, IssueActivity, IssueStatus, Watcher, Attachment
+from issues.models import Comment, Issue, IssueActivity, IssueStatus, Watcher, Attachment, IssueType, IssueSeverity, IssuePriority
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -28,6 +28,7 @@ _FILTER_FIELDS = {
     'status':      'status__slug',
     'assigned_to': 'assigned_to__username',
     'created_by':  'created_by__username',
+    'watched_by':  'watchers__user__username',
 }
 
 _SORTABLE_FIELDS = {
@@ -46,6 +47,21 @@ def _add_activity(issue, actor, action, details=''):
     IssueActivity.objects.create(issue=issue, actor=actor, action=action, details=details)
 
 
+def _catalog_context():
+    return {
+        'type_map': {t.slug: t for t in IssueType.objects.all()},
+        'severity_map': {s.slug: s for s in IssueSeverity.objects.all()},
+        'priority_map': {p.slug: p for p in IssuePriority.objects.all()},
+    }
+
+
+def _full_issue(issue_id):
+    return get_object_or_404(
+        Issue.objects.select_related('status', 'assigned_to', 'created_by').prefetch_related('tags'),
+        pk=issue_id,
+    )
+
+
 class IssueListView(APIView):
     def get(self, request):
         q = request.GET.get('q', '').strip()
@@ -54,7 +70,7 @@ class IssueListView(APIView):
 
         issues = Issue.objects.select_related(
             'status', 'assigned_to', 'created_by'
-        ).prefetch_related('tags')
+        ).prefetch_related('tags').distinct()
 
         if q:
             issues = issues.filter(
@@ -72,8 +88,14 @@ class IssueListView(APIView):
                 order_field = f'-{order_field}'
             issues = issues.order_by(order_field)
 
-        serializer = IssueListSerializer(issues, many=True)
+        catalog_context = {
+            'type_map': {t.slug: t for t in IssueType.objects.all()},
+            'severity_map': {s.slug: s for s in IssueSeverity.objects.all()},
+            'priority_map': {p.slug: p for p in IssuePriority.objects.all()},
+        }
+        serializer = IssueListSerializer(issues, many=True, context=catalog_context)
         return Response(serializer.data)
+
     def post(self, request):
         serializer = IssueDetailSerializer(data=request.data)
         
@@ -140,13 +162,7 @@ def issue_bulk_insert(request):
 
 class IssueDeadlineView(APIView):
     def post(self, request, issue_id):
-        try:
-            issue = Issue.objects.get(pk=issue_id)
-        except Issue.DoesNotExist:
-            return Response(
-                {'message': f"No issue with id '{issue_id}' found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        issue = _full_issue(issue_id)
 
         deadline_str = request.data.get('deadline')
         if deadline_str:
@@ -161,33 +177,18 @@ class IssueDeadlineView(APIView):
             issue.deadline = None
 
         issue.save(update_fields=['deadline'])
-        serializer = IssueDetailSerializer(issue)
-        return Response(serializer.data)
+        return Response(IssueDetailSerializer(issue, context=_catalog_context()).data)
 
     def delete(self, request, issue_id):
-        try:
-            issue = Issue.objects.get(pk=issue_id)
-        except Issue.DoesNotExist:
-            return Response(
-                {'message': f"No issue with id '{issue_id}' found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
+        issue = _full_issue(issue_id)
         issue.deadline = None
         issue.save(update_fields=['deadline'])
-        serializer = IssueDetailSerializer(issue)
-        return Response(serializer.data)
+        return Response(IssueDetailSerializer(issue, context=_catalog_context()).data)
 
 
 class IssueAssignView(APIView):
     def post(self, request, issue_id):
-        try:
-            issue = Issue.objects.get(pk=issue_id)
-        except Issue.DoesNotExist:
-            return Response(
-                {'message': f"No issue with id '{issue_id}' found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        issue = _full_issue(issue_id)
 
         username = request.data.get('assigned_to')
         if username:
@@ -203,8 +204,7 @@ class IssueAssignView(APIView):
             issue.assigned_to = None
 
         issue.save(update_fields=['assigned_to'])
-        serializer = IssueDetailSerializer(issue)
-        return Response(serializer.data)
+        return Response(IssueDetailSerializer(issue, context=_catalog_context()).data)
 
 @api_view(['GET', 'DELETE', 'PUT'])
 def issue_detail(request, issue_id):
@@ -215,7 +215,12 @@ def issue_detail(request, issue_id):
     )
 
     if request.method == 'GET':
-        serializer = IssueDetailSerializer(issue)
+        catalog_context = {
+            'type_map': {t.slug: t for t in IssueType.objects.all()},
+            'severity_map': {s.slug: s for s in IssueSeverity.objects.all()},
+            'priority_map': {p.slug: p for p in IssuePriority.objects.all()},
+        }
+        serializer = IssueDetailSerializer(issue, context=catalog_context)
         return Response(serializer.data)
 
     if request.method == 'PUT':
@@ -242,7 +247,7 @@ def issue_detail(request, issue_id):
 
 @api_view(['POST'])
 def issue_set_status(request, issue_id):
-    issue = get_object_or_404(Issue, pk=issue_id)
+    issue = _full_issue(issue_id)
     serializer = IssueStatusUpdateSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -252,7 +257,7 @@ def issue_set_status(request, issue_id):
     issue.save(update_fields=['status'])
     _add_activity(issue, request.user, 'updated status via API', new_status.name)
 
-    return Response({'id': issue.id, 'status': new_status.name}, status=status.HTTP_200_OK)
+    return Response(IssueDetailSerializer(issue, context=_catalog_context()).data)
 
 
 @api_view(['GET', 'POST'])
