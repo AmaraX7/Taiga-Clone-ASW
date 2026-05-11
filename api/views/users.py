@@ -1,11 +1,15 @@
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
 from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
 
 from accounts.models import UserProfile
+from issues.models import Comment
 from api.serializers.users import UserProfileSerializer
+from api.serializers.issues import UserCommentSerializer
 
 
 def _first_error(errors):
@@ -65,3 +69,11 @@ class UserDetailView(APIView):
             )
         serializer.save()
         return Response(serializer.data)
+
+
+@api_view(['GET'])
+def user_comments(request, username):
+    user = get_object_or_404(User, username=username)
+    comments = Comment.objects.filter(author=user).select_related('issue').order_by('-created_at')
+    serializer = UserCommentSerializer(comments, many=True)
+    return Response(serializer.data)

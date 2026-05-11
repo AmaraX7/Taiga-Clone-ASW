@@ -26,7 +26,7 @@ from api.views.issues import (
     issue_attachments,
     attachment_delete,
 )
-from api.views.users import UserDetailView, UserListView
+from api.views.users import UserDetailView, UserListView, user_comments
 
 app_name = 'api'
 
@@ -71,5 +71,6 @@ urlpatterns = [
 
     # Users
     path('users/', UserListView.as_view(), name='api-users'),
+    path('users/<str:username>/comments/', user_comments, name='api-user-comments'),
     path('users/<str:username>/', UserDetailView.as_view(), name='api-user-detail'),
 ]
