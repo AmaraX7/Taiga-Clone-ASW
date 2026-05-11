@@ -6,9 +6,10 @@ from accounts.models import UserProfile
 
 class ApiKeyAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        api_key = request.headers.get('Authorization')
-        if not api_key:
+        raw = request.headers.get('Authorization', '')
+        if not raw.startswith('Api-Key '):
             return None
+        api_key = raw[len('Api-Key '):]
         try:
             profile = UserProfile.objects.select_related('user').get(api_key=api_key)
         except UserProfile.DoesNotExist:
